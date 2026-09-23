@@ -1,103 +1,45 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { CartItem, Product, ProductVariant } from '../types';
+import React, { createContext, useContext, useState } from 'react';
+import { CartItem, Product } from '../types';
 
 interface CartContextType {
   cart: CartItem[];
-  addToCart: (product: Product, variant: ProductVariant, quantity?: number) => void;
-  removeFromCart: (variantId: string) => void;
-  updateQuantity: (variantId: string, quantity: number) => void;
+  addToCart: (product: Product, color: string, size: string) => void;
+  removeFromCart: (index: number) => void;
   clearCart: () => void;
-  isCartOpen: boolean;
-  setIsCartOpen: (open: boolean) => void;
-  totalItems: number;
-  subtotal: number;
-  discountCode: string | null;
-  discountAmount: number;
-  setAppliedDiscount: (code: string | null, amount: number) => void;
-  finalTotal: number;
+  totalPrice: number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [cart, setCart] = useState<CartItem[]>(() => {
-    const saved = localStorage.getItem('technishop_cart');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [discountCode, setDiscountCode] = useState<string | null>(null);
-  const [discountAmount, setDiscountAmount] = useState<number>(0);
+  const [cart, setCart] = useState<CartItem[]>([]);
 
-  useEffect(() => {
-    localStorage.setItem('technishop_cart', JSON.stringify(cart));
-  }, [cart]);
-
-  const addToCart = (product: Product, variant: ProductVariant, quantity = 1) => {
+  const addToCart = (product: Product, color: string, size: string) => {
     setCart((prev) => {
-      const existingIndex = prev.findIndex((item) => item.variant.id === variant.id);
-      if (existingIndex > -1) {
-        const updated = [...prev];
-        const newQty = updated[existingIndex].quantity + quantity;
-        updated[existingIndex].quantity = Math.min(newQty, variant.stock);
-        return updated;
+      const existing = prev.find(
+        (item) => item.product.id === product.id && item.selectedColor === color && item.selectedSize === size
+      );
+      if (existing) {
+        return prev.map((item) =>
+          item === existing ? { ...item, quantity: item.quantity + 1 } : item
+        );
       }
-      return [...prev, { product, variant, quantity: Math.min(quantity, variant.stock) }];
+      return [...prev, { product, selectedColor: color, selectedSize: size, quantity: 1 }];
     });
-    setIsCartOpen(true);
   };
 
-  const removeFromCart = (variantId: string) => {
-    setCart((prev) => prev.filter((item) => item.variant.id !== variantId));
-  };
-
-  const updateQuantity = (variantId: string, quantity: number) => {
-    if (quantity <= 0) {
-      removeFromCart(variantId);
-      return;
-    }
-    setCart((prev) =>
-      prev.map((item) => {
-        if (item.variant.id === variantId) {
-          return { ...item, quantity: Math.min(quantity, item.variant.stock) };
-        }
-        return item;
-      })
-    );
+  const removeFromCart = (index: number) => {
+    setCart((prev) => prev.filter((_, i) => i !== index));
   };
 
   const clearCart = () => {
     setCart([]);
-    setDiscountCode(null);
-    setDiscountAmount(0);
   };
 
-  const setAppliedDiscount = (code: string | null, amount: number) => {
-    setDiscountCode(code);
-    setDiscountAmount(amount);
-  };
-
-  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const subtotal = cart.reduce((sum, item) => sum + item.variant.price * item.quantity, 0);
-  const finalTotal = Math.max(0, subtotal - discountAmount);
+  const totalPrice = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
   return (
-    <CartContext.Provider
-      value={{
-        cart,
-        addToCart,
-        removeFromCart,
-        updateQuantity,
-        clearCart,
-        isCartOpen,
-        setIsCartOpen,
-        totalItems,
-        subtotal,
-        discountCode,
-        discountAmount,
-        setAppliedDiscount,
-        finalTotal,
-      }}
-    >
+    <CartContext.Provider value={{ cart, addToCart, removeFromCart, clearCart, totalPrice }}>
       {children}
     </CartContext.Provider>
   );
@@ -105,8 +47,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useCart = () => {
   const context = useContext(CartContext);
-  if (!context) {
-    throw new Error('useCart must be used within CartProvider');
-  }
+  if (!context) throw new Error('useCart must be used within CartProvider');
   return context;
 };

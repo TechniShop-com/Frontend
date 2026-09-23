@@ -1,45 +1,37 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { BrandThemeProvider } from './context/BrandThemeContext';
 import { CartProvider } from './context/CartContext';
-import { Navbar } from './components/layout/Navbar';
-import { Footer } from './components/layout/Footer';
-import { CartDrawer } from './components/cart/CartDrawer';
-
+import { Navbar } from './components/Navbar';
 import { HomePage } from './pages/HomePage';
-import { BrandCatalogPage } from './pages/BrandCatalogPage';
 import { ProductDetailPage } from './pages/ProductDetailPage';
+import { CartPage } from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
-import { OrderConfirmationPage } from './pages/OrderConfirmationPage';
-import { OrderStatusPage } from './pages/OrderStatusPage';
-import { ClaimsPage } from './pages/ClaimsPage';
-import { AdminPage } from './pages/AdminPage';
 
 export const App: React.FC = () => {
+  const [activeBrand, setActiveBrand] = useState('TECHNI_SCHOOLS');
+
   return (
-    <BrandThemeProvider>
-      <CartProvider>
-        <Router>
-          <div className="min-h-screen flex flex-col bg-gray-50 text-gray-900 font-sans selection:bg-emerald-500 selection:text-white">
-            <Navbar />
-            <CartDrawer />
-            <main className="flex-1">
+    <CartProvider>
+      <Router>
+        <div className="min-h-screen bg-gray-50 text-gray-900 font-sans flex flex-col justify-between">
+          <div>
+            <Navbar activeBrand={activeBrand} setActiveBrand={setActiveBrand} />
+            <main>
               <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/catalog" element={<BrandCatalogPage />} />
-                <Route path="/products/:id" element={<ProductDetailPage />} />
+                <Route path="/" element={<HomePage activeBrand={activeBrand} />} />
+                <Route path="/product/:id" element={<ProductDetailPage />} />
+                <Route path="/cart" element={<CartPage />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
-                <Route path="/order-confirmation/:orderNumber" element={<OrderConfirmationPage />} />
-                <Route path="/status" element={<OrderStatusPage />} />
-                <Route path="/claims" element={<ClaimsPage />} />
-                <Route path="/admin" element={<AdminPage />} />
               </Routes>
             </main>
-            <Footer />
           </div>
-        </Router>
-      </CartProvider>
-    </BrandThemeProvider>
+
+          <footer className="bg-slate-900 text-gray-400 text-xs text-center p-4 border-t border-slate-800">
+            TechniShop - Etap 1 (Frontend MVP) | Techni Schools & Techni Zdalni
+          </footer>
+        </div>
+      </Router>
+    </CartProvider>
   );
 };
 
