@@ -27,7 +27,7 @@ export const App: React.FC = () => {
           </div>
 
           <footer className="bg-slate-900 text-gray-400 text-xs text-center p-4 border-t border-slate-800">
-            TechniShop - Etap 1 (Frontend MVP) | Techni Schools & Techni Zdalni
+            TechniShop | Techni Schools & Techni Zdalni
           </footer>
         </div>
       </Router>

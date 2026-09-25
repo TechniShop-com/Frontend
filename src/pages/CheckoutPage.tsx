@@ -12,7 +12,7 @@ export const CheckoutPage: React.FC = () => {
 
   if (isOrdered) {
     return (
-      <div className="max-w-xl mx-auto p-8 text-center bg-white border rounded-2xl space-y-4 my-10 shadow-sm">
+      <div className="max-w-xl mx-auto p-8 text-center bg-white border border-gray-200 rounded-3xl space-y-4 my-10 shadow-lg">
         <h2 className="text-2xl font-bold text-emerald-600">✓ Zamówienie Złożone!</h2>
         <p className="text-xs text-gray-600">
           Dziękujemy {name}. Zamówienie na kwotę <strong>{totalPrice.toFixed(2)} zł</strong> zostało opłacone i przyjęte do realizacji.
@@ -22,7 +22,7 @@ export const CheckoutPage: React.FC = () => {
             clearCart();
             window.location.href = '/';
           }}
-          className="px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-lg"
+          className="px-5 py-2.5 bg-slate-900 text-white text-xs font-bold rounded-xl"
         >
           Wróć do sklepu
         </button>
@@ -32,7 +32,7 @@ export const CheckoutPage: React.FC = () => {
 
   if (cart.length === 0) {
     return (
-      <div className="max-w-xl mx-auto p-8 text-center bg-white border rounded-2xl my-10">
+      <div className="max-w-xl mx-auto p-8 text-center bg-white border border-gray-200 rounded-3xl my-10 shadow-sm">
         <p className="text-xs font-bold text-gray-700">Koszyk jest pusty.</p>
       </div>
     );
@@ -45,9 +45,9 @@ export const CheckoutPage: React.FC = () => {
 
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Płatność i Dostawa (Mock Frontend)</h1>
+      <h1 className="text-2xl font-bold text-gray-900">Płatność i Dostawa</h1>
 
-      <form onSubmit={handleSubmit} className="bg-white border rounded-2xl p-6 space-y-4 shadow-sm text-xs">
+      <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-3xl p-6 sm:p-8 space-y-4 shadow-sm text-xs">
         <div>
           <label className="block font-bold text-gray-700 mb-1">Imię i Nazwisko *</label>
           <input
@@ -56,7 +56,7 @@ export const CheckoutPage: React.FC = () => {
             placeholder="np. Jan Kowalski"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full p-2.5 border rounded-lg focus:outline-none"
+            className="w-full p-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
 
@@ -68,7 +68,7 @@ export const CheckoutPage: React.FC = () => {
             placeholder="jan@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-2.5 border rounded-lg focus:outline-none"
+            className="w-full p-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
 
@@ -80,7 +80,7 @@ export const CheckoutPage: React.FC = () => {
             placeholder="ul. Szkolna 10/2, Warszawa"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
-            className="w-full p-2.5 border rounded-lg focus:outline-none"
+            className="w-full p-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
 
@@ -89,7 +89,7 @@ export const CheckoutPage: React.FC = () => {
           <select
             value={paymentMethod}
             onChange={(e) => setPaymentMethod(e.target.value)}
-            className="w-full p-2.5 border rounded-lg bg-white"
+            className="w-full p-2.5 border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
             <option value="BLIK / Karta Online">Szybka płatność BLIK / Karta</option>
             <option value="Przelew">Przelew bankowy</option>
@@ -97,14 +97,14 @@ export const CheckoutPage: React.FC = () => {
           </select>
         </div>
 
-        <div className="border-t pt-4 space-y-2">
+        <div className="border-t border-gray-100 pt-4 space-y-3">
           <div className="flex justify-between font-bold text-sm text-gray-900">
             <span>Suma do zapłaty:</span>
             <span className="text-emerald-600">{totalPrice.toFixed(2)} zł</span>
           </div>
           <button
             type="submit"
-            className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md transition-colors"
+            className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md transition-colors"
           >
             Zapłać i Zakończ Zamówienie
           </button>
