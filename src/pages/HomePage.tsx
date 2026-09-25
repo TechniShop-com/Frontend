@@ -186,26 +186,6 @@ export const HomePage: React.FC<HomePageProps> = ({ activeBrand }) => {
           ))}
         </div>
       </section>
-
-      {/* FOOTER BAR (Modeled after Dark Bottom Footer in Reference Image) */}
-      <footer className="bg-slate-900 text-white py-12 px-4 border-t border-slate-800">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-xs text-gray-400">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-xl bg-purple-600 flex items-center justify-center font-black text-white text-sm">
-              T
-            </div>
-            <span className="text-sm font-black text-white">TechniShop</span>
-          </div>
-
-          <div className="flex space-x-6 font-semibold">
-            <Link to="/" className="hover:text-purple-400 transition-colors">Strona Główna</Link>
-            <Link to="/cart" className="hover:text-purple-400 transition-colors">Koszyk</Link>
-            <Link to="/checkout" className="hover:text-purple-400 transition-colors">Płatność</Link>
-          </div>
-
-          <p>© {new Date().getFullYear()} TechniShop. Oficjalny sklep Techni Schools & Techni Zdalni.</p>
-        </div>
-      </footer>
     </div>
   );
 };
