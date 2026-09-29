@@ -17,18 +17,18 @@ export const CartPage: React.FC = () => {
       </h1>
 
       {cart.length === 0 ? (
-        <div className="bg-white p-12 rounded-3xl border border-purple-100 text-center space-y-4 shadow-xl shadow-purple-900/5 animate-float">
-          <ShoppingBag className="w-16 h-16 mx-auto text-purple-500 stroke-[1.5] animate-bounce" />
+        <div className="bg-white p-12 rounded-3xl border border-purple-100 text-center space-y-4 shadow-xl shadow-purple-900/5 anim-hero-product">
+          <ShoppingBag className="w-16 h-16 mx-auto text-purple-500 stroke-[1.5] anim-wiggle" />
           <p className="text-sm font-semibold text-slate-600">Koszyk jest obecnie pusty.</p>
           <Link
             to="/"
-            className="inline-block px-6 py-3 text-xs font-extrabold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl shadow-lg shadow-purple-500/25 hover:scale-105 transition-all"
+            className="inline-block px-6 py-3 text-xs font-extrabold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl shadow-lg shadow-purple-500/25 hover:scale-105 transition-all anim-pulse-glow"
           >
             Przejdź do oferty
           </Link>
         </div>
       ) : (
-        <div className="bg-white border border-purple-100 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl shadow-purple-900/5 text-slate-900 animate-pulse-glow">
+        <div className="bg-white border border-purple-100 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl shadow-purple-900/5 text-slate-900 anim-breathe">
           <div className="space-y-4 divide-y divide-purple-100">
             {cart.map((item, index) => (
               <div key={index} className="pt-4 first:pt-0 flex items-center justify-between text-xs">

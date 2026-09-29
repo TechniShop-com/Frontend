@@ -33,13 +33,13 @@ export const ProductDetailPage: React.FC = () => {
 
       <div className="relative bg-white border border-purple-100 rounded-3xl p-6 sm:p-10 grid grid-cols-1 md:grid-cols-2 gap-8 shadow-2xl shadow-purple-900/10 hover:shadow-purple-900/20 transition-all duration-500 overflow-hidden">
         {/* Glow & Wave background elements */}
-        <div className="absolute top-0 right-0 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-spin-slow pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-purple-600/10 rounded-full blur-3xl animate-pulse-glow pointer-events-none" />
+        <div className="absolute top-0 right-0 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl anim-blob-a pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl anim-blob-b pointer-events-none" />
 
         {/* Floating Product Image Card */}
         <div className="space-y-4 relative z-10">
-          <div className="aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-purple-50 to-white border border-purple-100 shadow-xl shadow-purple-500/5 group animate-float relative">
-            <span className="absolute top-3 left-3 z-20 px-3 py-1 bg-purple-600 text-white font-extrabold text-[10px] uppercase tracking-wider rounded-full shadow-lg shadow-purple-500/30 animate-pulse">
+          <div className="aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-purple-50 to-white border border-purple-100 shadow-xl shadow-purple-500/10 group anim-hero-product relative">
+            <span className="absolute top-3 left-3 z-20 px-3 py-1 bg-purple-600 text-white font-extrabold text-[10px] uppercase tracking-wider rounded-full shadow-lg shadow-purple-500/30 anim-wiggle">
               HOT HIT
             </span>
             <img
@@ -53,8 +53,8 @@ export const ProductDetailPage: React.FC = () => {
         {/* Animated Details */}
         <div className="space-y-6 flex flex-col justify-between relative z-10">
           <div className="space-y-4">
-            <span className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full text-xs font-black bg-purple-100 text-purple-700 border border-purple-200 shadow-sm animate-bounce">
-              <Sparkles className="w-4 h-4 text-purple-600 animate-spin-slow" />
+            <span className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full text-xs font-black bg-purple-100 text-purple-700 border border-purple-200 shadow-sm anim-wiggle">
+              <Sparkles className="w-4 h-4 text-purple-600 anim-spin-slow" />
               <span>{product.brand === 'TECHNI_ZDALNI' ? 'Techni Zdalni' : 'Techni Schools'}</span>
             </span>
 
