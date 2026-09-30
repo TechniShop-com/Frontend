@@ -69,3 +69,22 @@ export const createOrderApi = async (orderData: {
   const response = await api.post('/orders', orderData);
   return response.data;
 };
+
+// Rejestracja użytkownika w backendzie
+export const registerUserApi = async (name: string, email: string, password: string) => {
+  const response = await api.post<{ message: string; user: any }>('/auth/register', {
+    name,
+    email,
+    password,
+  });
+  return response.data;
+};
+
+// Logowanie użytkownika w backendzie
+export const loginUserApi = async (email: string, password: string) => {
+  const response = await api.post<{ message: string; user: any }>('/auth/login', {
+    email,
+    password,
+  });
+  return response.data;
+};

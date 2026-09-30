@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { ShoppingBag, Search, ChevronDown, Sparkle, User, Users } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { ShoppingBag, Search, ChevronDown, Check, User, LogOut } from 'lucide-react';
 import { Logo } from './Logo';
 
 interface NavbarProps {
@@ -11,12 +12,15 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = () => {
   const { cart } = useCart();
+  const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [navSearch, setNavSearch] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   const activeCategory = searchParams.get('category') || 'all';
   const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -26,6 +30,9 @@ export const Navbar: React.FC<NavbarProps> = () => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -78,105 +85,154 @@ export const Navbar: React.FC<NavbarProps> = () => {
           >
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className={`flex items-center space-x-1.5 py-2 px-3 rounded-xl transition-all duration-300 ${
+              className={`flex items-center space-x-1.5 py-2 px-3 rounded-xl text-xs transition-all duration-200 cursor-pointer ${
                 activeCategory === 'kobiety' || activeCategory === 'mezczyzni'
-                  ? 'text-purple-600 bg-purple-50 font-black'
-                  : 'text-gray-700 hover:text-purple-600 hover:bg-purple-50/60'
+                  ? 'text-purple-600 bg-purple-50 font-bold'
+                  : 'text-slate-700 hover:text-purple-600 hover:bg-slate-100/70 font-semibold'
               }`}
             >
               <span>Produkty</span>
               <ChevronDown
-                className={`w-4 h-4 transition-transform duration-300 ${
-                  isDropdownOpen ? 'rotate-180 text-purple-600' : 'text-gray-400'
+                className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                  isDropdownOpen ? 'rotate-180 text-purple-600' : 'text-slate-400'
                 }`}
               />
             </button>
 
             {/* Dropdown Menu Popup */}
             {isDropdownOpen && (
-              <div className="absolute top-full left-0 mt-1 w-56 bg-white/95 backdrop-blur-2xl border border-purple-100 rounded-2xl shadow-2xl shadow-purple-900/15 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200 divide-y divide-purple-50">
-                <div className="p-1 space-y-1">
-                  <button
-                    onClick={() => handleCategorySelect('all')}
-                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                      activeCategory === 'all'
-                        ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
-                        : 'text-slate-700 hover:bg-purple-50 hover:text-purple-600'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <Sparkle className="w-3.5 h-3.5" />
-                      <span>Wszystkie Produkty</span>
-                    </div>
-                  </button>
-                </div>
+              <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-slate-200/90 rounded-2xl shadow-xl shadow-slate-900/10 p-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                <button
+                  onClick={() => handleCategorySelect('all')}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-colors cursor-pointer ${
+                    activeCategory === 'all'
+                      ? 'text-purple-600 font-bold bg-purple-50'
+                      : 'text-slate-700 hover:text-slate-900 hover:bg-slate-50 font-medium'
+                  }`}
+                >
+                  <span>Wszystkie produkty</span>
+                  {activeCategory === 'all' && <Check className="w-3.5 h-3.5 text-purple-600 shrink-0" />}
+                </button>
 
-                <div className="p-1 space-y-1">
-                  {/* Kobiety */}
-                  <button
-                    onClick={() => handleCategorySelect('kobiety')}
-                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                      activeCategory === 'kobiety'
-                        ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
-                        : 'text-slate-700 hover:bg-purple-50 hover:text-purple-600'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <span className="w-2 h-2 rounded-full bg-pink-500 animate-pulse" />
-                      <span>Kobiety</span>
-                    </div>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-pink-100 text-pink-700 font-extrabold">
-                      Damskie
-                    </span>
-                  </button>
+                <div className="my-1 border-t border-slate-100" />
 
-                  {/* Mężczyźni */}
-                  <button
-                    onClick={() => handleCategorySelect('mezczyzni')}
-                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                      activeCategory === 'mezczyzni'
-                        ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
-                        : 'text-slate-700 hover:bg-purple-50 hover:text-purple-600'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-                      <span>Mężczyźni</span>
-                    </div>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-extrabold">
-                      Męskie
-                    </span>
-                  </button>
-                </div>
+                <button
+                  onClick={() => handleCategorySelect('kobiety')}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-colors cursor-pointer ${
+                    activeCategory === 'kobiety'
+                      ? 'text-purple-600 font-bold bg-purple-50'
+                      : 'text-slate-700 hover:text-slate-900 hover:bg-slate-50 font-medium'
+                  }`}
+                >
+                  <span>Kobiety</span>
+                  {activeCategory === 'kobiety' && <Check className="w-3.5 h-3.5 text-purple-600 shrink-0" />}
+                </button>
+
+                <button
+                  onClick={() => handleCategorySelect('mezczyzni')}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-colors cursor-pointer ${
+                    activeCategory === 'mezczyzni'
+                      ? 'text-purple-600 font-bold bg-purple-50'
+                      : 'text-slate-700 hover:text-slate-900 hover:bg-slate-50 font-medium'
+                  }`}
+                >
+                  <span>Mężczyźni</span>
+                  {activeCategory === 'mezczyzni' && <Check className="w-3.5 h-3.5 text-purple-600 shrink-0" />}
+                </button>
               </div>
             )}
           </div>
         </div>
 
-        {/* Right Search Input & Cart Trigger */}
-        <div className="flex items-center space-x-4">
-          <form onSubmit={handleSearchSubmit} className="relative hidden sm:block w-48 lg:w-64">
-            <Search className="w-4 h-4 absolute left-3 top-2.5 text-purple-400" />
-            <input
-              type="text"
-              placeholder="Szukaj produktów..."
-              value={navSearch}
-              onChange={(e) => setNavSearch(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-xs bg-purple-50/70 border border-purple-200 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white text-gray-800 font-medium transition-all"
-            />
-          </form>
+        {/* Right Search Input, Cart Trigger & User Auth Avatar */}
+        {/* Right Search Input, Cart Trigger & User Auth Avatar */}
+        <div className="flex items-center space-x-2.5 sm:space-x-3.5">
+          {/* Modern Sleek Search */}
+          <div className="relative hidden sm:block w-44 lg:w-60 group">
+            <form onSubmit={handleSearchSubmit}>
+              <Search className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-purple-600 transition-colors pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Szukaj produktów..."
+                value={navSearch}
+                onChange={(e) => setNavSearch(e.target.value)}
+                className="w-full pl-9 pr-8 py-2 text-xs bg-slate-100 hover:bg-slate-100/80 focus:bg-white text-slate-800 placeholder:text-slate-400 font-medium rounded-full border border-slate-200/80 focus:border-purple-500 focus:outline-none focus:ring-4 focus:ring-purple-500/10 shadow-xs transition-all duration-200"
+              />
+            </form>
+          </div>
 
+          {/* Cart Button */}
           <Link
             to="/cart"
-            className="flex items-center space-x-2 p-2.5 rounded-full bg-purple-50 hover:bg-purple-100 text-purple-700 transition-all duration-300 relative group hover:scale-110 shadow-sm border border-purple-100"
+            className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-100 hover:bg-purple-50 text-slate-700 hover:text-purple-600 border border-slate-200/80 hover:border-purple-200 shadow-xs hover:shadow transition-all duration-200 group active:scale-95 cursor-pointer"
+            title="Koszyk"
           >
-            <ShoppingBag className="w-5 h-5 text-purple-600 group-hover:rotate-12 group-hover:scale-125 transition-transform animate-bounce" />
+            <ShoppingBag className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-slate-700 group-hover:text-purple-600 group-hover:scale-105 transition-all" />
             {totalCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-purple-600 text-white font-black text-xs rounded-full flex items-center justify-center shadow-md shadow-purple-600/40 animate-bounce">
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-extrabold text-[10px] rounded-full flex items-center justify-center shadow-md shadow-purple-600/30 ring-2 ring-white">
                 {totalCount}
               </span>
             )}
           </Link>
+
+          {/* User Auth: Avatar if logged in, "Zaloguj się" if not logged in */}
+          {!user ? (
+            <Link
+              to="/login"
+              className="flex items-center space-x-1.5 px-3.5 sm:px-4 py-2 rounded-full font-bold text-xs text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-500 hover:to-indigo-500 shadow-md shadow-purple-600/20 hover:shadow-lg hover:shadow-purple-600/30 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer"
+            >
+              <User className="w-3.5 h-3.5 text-purple-200" />
+              <span>Zaloguj się</span>
+            </Link>
+          ) : (
+            <div className="relative" ref={userMenuRef}>
+              <button
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full p-[2px] bg-gradient-to-tr from-purple-600 via-indigo-500 to-purple-400 shadow-md hover:shadow-purple-600/30 hover:scale-105 transition-all flex items-center justify-center focus:outline-none"
+                title={`Konto: ${user.name}`}
+              >
+                <div className="w-full h-full rounded-full overflow-hidden bg-purple-100 flex items-center justify-center">
+                  <img
+                    src={user.avatarUrl || 'https://api.dicebear.com/7.x/adventurer/svg?seed=TechniHuman&backgroundColor=b6e3f4,c0aede,d1d4f9'}
+                    alt={user.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </button>
+
+              {/* User Dropdown Menu */}
+              {isUserMenuOpen && (
+                <div className="absolute top-full right-0 mt-2 w-56 bg-white/95 backdrop-blur-2xl border border-purple-100 rounded-2xl shadow-2xl shadow-purple-900/15 p-3 z-50 animate-in fade-in slide-in-from-top-2 duration-200 divide-y divide-purple-50">
+                  <div className="pb-3 flex items-center space-x-3">
+                    <div className="w-9 h-9 rounded-full overflow-hidden bg-purple-100 ring-2 ring-purple-200 flex-shrink-0">
+                      <img
+                        src={user.avatarUrl || 'https://api.dicebear.com/7.x/adventurer/svg?seed=TechniHuman'}
+                        alt={user.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="overflow-hidden text-left">
+                      <h4 className="font-extrabold text-xs text-slate-900 truncate">{user.name}</h4>
+                      <p className="text-[10px] text-slate-500 truncate">{user.email}</p>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 space-y-1">
+                    <button
+                      onClick={() => {
+                        setIsUserMenuOpen(false);
+                        logout();
+                      }}
+                      className="w-full flex items-center space-x-2 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>Wyloguj się</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </header>
