@@ -17,10 +17,10 @@ const AppLayout: React.FC = () => {
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
 
   return (
-    <div className="min-h-screen bg-gray-50 text-slate-900 font-sans flex flex-col justify-between selection:bg-purple-500 selection:text-white">
-      <div className="flex-1 flex flex-col">
+    <div className={`min-h-screen bg-[#FAF7F2] text-slate-900 font-sans flex flex-col ${isAuthPage ? 'lg:h-screen lg:overflow-hidden' : 'justify-between'} selection:bg-purple-600 selection:text-white`}>
+      <div className="flex-1 flex flex-col h-full">
         <Navbar />
-        <main className="flex-1 flex flex-col">
+        <main className="flex-1 flex flex-col h-full">
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/products" element={<ProductsPage />} />
@@ -33,11 +33,11 @@ const AppLayout: React.FC = () => {
         </main>
       </div>
 
-      {/* SINGLE UNIFIED CLEAN PURPLE & WHITE FOOTER BAR (Hidden on /login for pure full-screen layout) */}
+      {/* SINGLE UNIFIED CLEAN PURPLE & WARM CREAM FOOTER BAR */}
       {!isAuthPage && (
-        <footer className="bg-white/95 backdrop-blur-xl border-t border-purple-100 shadow-xl shadow-purple-900/5 py-6 sm:py-8 px-6 relative overflow-hidden mt-12">
-          {/* Subtle Purple Background Glow */}
-          <div className="absolute top-0 right-1/4 w-96 h-24 bg-purple-500/5 rounded-full blur-3xl animate-pulse-glow pointer-events-none" />
+        <footer className="bg-[#F5F2EB] border-t border-[#E7E2D8] py-6 sm:py-8 px-6 relative overflow-hidden mt-12">
+          {/* Subtle Background Glow */}
+          <div className="absolute top-0 right-1/4 w-96 h-24 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
           
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 relative z-10 text-xs">
             {/* Brand Logo & Name */}

@@ -11,32 +11,32 @@ export const CartPage: React.FC = () => {
     <div className="max-w-4xl mx-auto p-6 space-y-6 pt-8">
       <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center space-x-2">
         <span>Koszyk Zakupowy</span>
-        <span className="text-xs px-3 py-1 bg-purple-100 text-purple-700 font-extrabold rounded-full border border-purple-200">
+        <span className="text-xs px-3 py-1 bg-[#EFECE4] text-purple-700 font-extrabold rounded-full border border-[#E2DDD3]">
           {cart.length} przedmioty
         </span>
       </h1>
 
       {cart.length === 0 ? (
-        <div className="bg-white p-12 rounded-3xl border border-purple-100 text-center space-y-4 shadow-sm">
+        <div className="bg-white p-12 rounded-3xl border border-[#EBE6DD] text-center space-y-4 shadow-xs">
           <ShoppingBag className="w-16 h-16 mx-auto text-purple-500 stroke-[1.5]" />
           <p className="text-sm font-semibold text-slate-600">Koszyk jest obecnie pusty.</p>
           <Link
             to="/products"
-            className="inline-block px-6 py-3 text-xs font-extrabold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl shadow-md shadow-purple-500/25 hover:scale-105 transition-all"
+            className="inline-block px-6 py-3 text-xs font-bold text-white bg-purple-600 hover:bg-purple-700 active:bg-purple-800 rounded-xl shadow-xs transition-colors"
           >
             Przejdź do oferty
           </Link>
         </div>
       ) : (
-        <div className="bg-white border border-purple-100 rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm text-slate-900">
-          <div className="space-y-4 divide-y divide-purple-100">
+        <div className="bg-white border border-[#EBE6DD] rounded-3xl p-6 sm:p-8 space-y-6 shadow-xs text-slate-900">
+          <div className="space-y-4 divide-y divide-[#EBE6DD]">
             {cart.map((item, index) => (
               <div key={index} className="pt-4 first:pt-0 flex items-center justify-between text-xs">
                 <div className="flex items-center space-x-4">
                   <img
                     src={item.product.imageUrl}
                     alt={item.product.title}
-                    className="w-16 h-16 object-cover rounded-xl border border-purple-100 bg-purple-50 hover:scale-105 transition-transform duration-200"
+                    className="w-16 h-16 object-cover rounded-xl border border-[#EBE6DD] bg-[#FAF7F2] hover:scale-105 transition-transform duration-200"
                   />
                   <div>
                     <h4 className="font-extrabold text-sm text-slate-900">{item.product.title}</h4>
@@ -54,7 +54,7 @@ export const CartPage: React.FC = () => {
                   </span>
                   <button
                     onClick={() => removeFromCart(index)}
-                    className="text-gray-400 hover:text-red-500 p-1.5 transition-colors hover:scale-110"
+                    className="text-slate-400 hover:text-red-500 p-1.5 transition-colors hover:scale-110 cursor-pointer"
                     title="Usuń z koszyka"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -64,7 +64,7 @@ export const CartPage: React.FC = () => {
             ))}
           </div>
 
-          <div className="border-t border-purple-100 pt-4 flex justify-between items-center text-sm">
+          <div className="border-t border-[#EBE6DD] pt-4 flex justify-between items-center text-sm">
             <span className="font-bold text-slate-600">Razem do zapłaty:</span>
             <span className="text-2xl font-black text-purple-700">
               {totalPrice.toFixed(2)} zł
@@ -73,7 +73,7 @@ export const CartPage: React.FC = () => {
 
           <button
             onClick={() => navigate('/checkout')}
-            className="w-full py-4 px-6 text-xs font-black text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-500 hover:to-indigo-500 rounded-xl shadow-lg shadow-purple-500/25 flex items-center justify-center space-x-2 transition-all duration-300 hover:scale-[1.01] active:scale-95"
+            className="w-full py-3.5 px-6 text-sm font-bold text-white bg-purple-600 hover:bg-purple-700 active:bg-purple-800 rounded-xl shadow-xs flex items-center justify-center space-x-2 transition-colors cursor-pointer"
           >
             <span>Przejdź do Płatności i Dostawy</span>
             <ArrowRight className="w-4 h-4" />

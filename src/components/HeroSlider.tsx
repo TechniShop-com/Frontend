@@ -101,7 +101,7 @@ export const HeroSlider: React.FC = () => {
 
   return (
     <div
-      className="relative w-full h-[530px] sm:h-[620px] lg:h-[680px] rounded-3xl overflow-hidden shadow-2xl shadow-purple-950/20 border border-purple-100 bg-[#060e1e] group select-none"
+      className="relative w-full h-[530px] sm:h-[620px] lg:h-[680px] rounded-3xl overflow-hidden shadow-xl shadow-purple-950/15 border border-[#E2DDD3] bg-[#060e1e] group select-none"
     >
       {/* Infinite Seamless Carousel Track */}
       <div

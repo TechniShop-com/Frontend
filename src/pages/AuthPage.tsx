@@ -53,9 +53,9 @@ export const AuthPage: React.FC = () => {
   };
 
   return (
-    <div className="w-full min-h-[calc(100vh-73px)] grid grid-cols-1 lg:grid-cols-12 bg-white">
+    <div className="w-full flex-1 min-h-[calc(100vh-65px)] lg:h-full grid grid-cols-1 lg:grid-cols-12 bg-white">
       {/* LEFT COLUMN: Full-Screen Atmospheric Brand Merch Showcase (Desktop) */}
-      <div className="hidden lg:flex lg:col-span-7 relative overflow-hidden bg-gradient-to-br from-purple-950 via-slate-950 to-indigo-950 p-12 xl:p-16 flex-col justify-between text-white select-none">
+      <div className="hidden lg:flex lg:col-span-7 relative overflow-hidden bg-gradient-to-br from-purple-950 via-slate-950 to-indigo-950 p-12 xl:p-16 flex-col justify-between text-white select-none h-full">
         {/* Background Visual Image with Ambient Purple Overlay */}
         <img
           src="https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=1600&q=80"
@@ -113,175 +113,224 @@ export const AuthPage: React.FC = () => {
         </div>
       </div>
 
-      {/* RIGHT COLUMN: Clean, Focused Auth Form (Comfortable Ergonomic Width) */}
-      <div className="lg:col-span-5 flex flex-col justify-center items-center p-6 sm:p-12 lg:p-14 bg-gradient-to-b from-slate-50/60 to-white relative overflow-hidden">
+      {/* RIGHT COLUMN: Clean, Focused Auth Form (Comfortable Ergonomic Width, Minimal Outer Padding) */}
+      <div className="lg:col-span-5 flex flex-col justify-center items-center py-3 px-4 sm:px-6 bg-[#FAF7F2] relative h-full">
         {/* Subtle decorative purple glow in top right */}
         <div className="absolute top-0 right-0 w-80 h-80 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="w-full max-w-[420px] bg-white sm:p-8 sm:rounded-3xl sm:border sm:border-slate-200/70 sm:shadow-xl sm:shadow-purple-900/5 space-y-6 relative z-10">
-          {/* Logo Brand Header */}
-          <div className="flex items-center justify-center">
-            <Link to="/" className="inline-block transition-transform hover:scale-105">
-              <Logo size="lg" />
-            </Link>
-          </div>
+        <div className="w-full max-w-[430px] bg-white px-6 py-5 sm:px-8 sm:py-6 rounded-3xl border border-[#EBE6DD] shadow-xl shadow-purple-950/5 min-h-[580px] sm:h-[590px] flex flex-col justify-between relative z-10">
+          <div className="space-y-3.5 sm:space-y-4">
+            {/* Logo Brand Header */}
+            <div className="flex items-center justify-center">
+              <Link to="/" className="inline-block transition-transform hover:scale-105">
+                <Logo size="lg" />
+              </Link>
+            </div>
 
-          {/* Heading and Subtext */}
-          <div className="space-y-1.5 text-center">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-              {!isRegister ? 'Zaloguj się' : 'Utwórz konto'}
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-500 font-medium">
-              {!isRegister
-                ? 'Wprowadź dane logowania, aby przejść do swojego konta.'
-                : 'Dołącz do TechniShop i zamawiaj oficjalny merch z rabatami.'}
-            </p>
-          </div>
+            {/* Heading and Subtext */}
+            <div className="space-y-1 text-center">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                {!isRegister ? 'Zaloguj się' : 'Utwórz konto'}
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-500 font-medium">
+                {!isRegister
+                  ? 'Wprowadź dane logowania, aby przejść do swojego konta.'
+                  : 'Dołącz do TechniShop i zamawiaj oficjalny merch.'}
+              </p>
+            </div>
 
-          {/* Segmented Control Switcher Tabs */}
-          <div className="grid grid-cols-2 p-1 bg-slate-100 rounded-2xl border border-slate-200/60">
-            <button
-              type="button"
-              onClick={() => {
-                navigate('/login');
-                setErrorMessage(null);
-              }}
-              className={`py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
-                !isRegister
-                  ? 'bg-white text-purple-700 shadow-sm font-extrabold'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Logowanie
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                navigate('/register');
-                setErrorMessage(null);
-              }}
-              className={`py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
-                isRegister
-                  ? 'bg-white text-purple-700 shadow-sm font-extrabold'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Rejestracja
-            </button>
+            {/* Segmented Control Switcher Tabs */}
+            <div className="grid grid-cols-2 p-1 bg-[#F0ECE4] rounded-2xl border border-[#E2DDD3]">
+              <button
+                type="button"
+                onClick={() => {
+                  navigate('/login');
+                  setErrorMessage(null);
+                }}
+                className={`py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                  !isRegister
+                    ? 'bg-white text-purple-700 shadow-sm font-extrabold'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Logowanie
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  navigate('/register');
+                  setErrorMessage(null);
+                }}
+                className={`py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                  isRegister
+                    ? 'bg-white text-purple-700 shadow-sm font-extrabold'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Rejestracja
+              </button>
+            </div>
           </div>
 
           {/* Error Message */}
           {errorMessage && (
-            <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-bold text-center animate-shake">
+            <div className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-bold text-center animate-shake">
               {errorMessage}
             </div>
           )}
 
           {/* Auth Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {isRegister && (
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                  Imię i Nazwisko
-                </label>
-                <div className="relative group">
-                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-purple-600 transition-colors pointer-events-none">
-                    <UserIcon className="w-4 h-4" />
+          <form onSubmit={handleSubmit} className="flex-1 flex flex-col justify-between py-1">
+            {isRegister ? (
+              <div className="space-y-2.5 sm:space-y-3 pt-1">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Imię i Nazwisko
+                  </label>
+                  <div className="relative group">
+                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-purple-600 transition-colors pointer-events-none">
+                      <UserIcon className="w-4 h-4" />
+                    </div>
+                    <input
+                      type="text"
+                      required
+                      placeholder="np. Jan Kowalski"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2.5 bg-[#FAF7F2] border border-[#DDD8CD] rounded-xl text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-purple-600 focus:ring-4 focus:ring-purple-600/10 transition-all"
+                    />
                   </div>
-                  <input
-                    type="text"
-                    required
-                    placeholder="np. Jan Kowalski"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-purple-600 focus:ring-4 focus:ring-purple-600/10 transition-all"
-                  />
                 </div>
-              </div>
-            )}
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                Adres Email
-              </label>
-              <div className="relative group">
-                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-purple-600 transition-colors pointer-events-none">
-                  <Mail className="w-4 h-4" />
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Adres Email
+                  </label>
+                  <div className="relative group">
+                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-purple-600 transition-colors pointer-events-none">
+                      <Mail className="w-4 h-4" />
+                    </div>
+                    <input
+                      type="email"
+                      required
+                      placeholder="twoj.email@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2.5 bg-[#FAF7F2] border border-[#DDD8CD] rounded-xl text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-purple-600 focus:ring-4 focus:ring-purple-600/10 transition-all"
+                    />
+                  </div>
                 </div>
-                <input
-                  type="email"
-                  required
-                  placeholder="twoj.email@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-purple-600 focus:ring-4 focus:ring-purple-600/10 transition-all"
-                />
-              </div>
-            </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                Hasło
-              </label>
-              <div className="relative group">
-                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-purple-600 transition-colors pointer-events-none">
-                  <Lock className="w-4 h-4" />
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Hasło
+                  </label>
+                  <div className="relative group">
+                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-purple-600 transition-colors pointer-events-none">
+                      <Lock className="w-4 h-4" />
+                    </div>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      placeholder="Minimum 6 znaków"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full pl-10 pr-11 py-2.5 bg-[#FAF7F2] border border-[#DDD8CD] rounded-xl text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-purple-600 focus:ring-4 focus:ring-purple-600/10 transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 focus:outline-none transition-colors cursor-pointer"
+                      title={showPassword ? 'Ukryj hasło' : 'Pokaż hasło'}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  placeholder="Minimum 6 znaków"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-11 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-purple-600 focus:ring-4 focus:ring-purple-600/10 transition-all"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 focus:outline-none transition-colors cursor-pointer"
-                  title={showPassword ? 'Ukryj hasło' : 'Pokaż hasło'}
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
 
-            {/* Remember Me / Forgot Password or Terms */}
-            {!isRegister ? (
-              <div className="flex items-center justify-between text-xs pt-0.5">
-                <label className="flex items-center space-x-2 cursor-pointer select-none text-slate-600 hover:text-slate-900">
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-4 h-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500 cursor-pointer accent-purple-600"
-                  />
-                  <span className="font-semibold">Zapamiętaj mnie</span>
-                </label>
-                <a
-                  href="#forgot"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    alert('Funkcja resetowania hasła zostanie wkrótce udostępniona.');
-                  }}
-                  className="font-bold text-purple-600 hover:text-purple-700 transition-colors"
-                >
-                  Nie pamiętasz hasła?
-                </a>
+                <div className="flex items-start space-x-2 text-xs text-slate-500 pt-0.5 leading-snug">
+                  <ShieldCheck className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
+                  <span>
+                    Rejestrując się, akceptujesz <span className="text-purple-600 font-semibold">Regulamin sklepu</span> oraz politykę prywatności.
+                  </span>
+                </div>
               </div>
             ) : (
-              <div className="flex items-start space-x-2 text-xs text-slate-500 pt-0.5">
-                <ShieldCheck className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
-                <span>
-                  Rejestrując się, akceptujesz <span className="text-purple-600 font-semibold">Regulamin sklepu</span> oraz politykę prywatności.
-                </span>
+              <div className="space-y-4 pt-1">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                    Adres Email
+                  </label>
+                  <div className="relative group">
+                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-purple-600 transition-colors pointer-events-none">
+                      <Mail className="w-4 h-4" />
+                    </div>
+                    <input
+                      type="email"
+                      required
+                      placeholder="twoj.email@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2.5 bg-[#FAF7F2] border border-[#DDD8CD] rounded-xl text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-purple-600 focus:ring-4 focus:ring-purple-600/10 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                    Hasło
+                  </label>
+                  <div className="relative group">
+                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-purple-600 transition-colors pointer-events-none">
+                      <Lock className="w-4 h-4" />
+                    </div>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      placeholder="Minimum 6 znaków"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full pl-10 pr-11 py-2.5 bg-[#FAF7F2] border border-[#DDD8CD] rounded-xl text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-purple-600 focus:ring-4 focus:ring-purple-600/10 transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 focus:outline-none transition-colors cursor-pointer"
+                      title={showPassword ? 'Ukryj hasło' : 'Pokaż hasło'}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-xs pt-1">
+                  <label className="flex items-center space-x-2 cursor-pointer select-none text-slate-600 hover:text-slate-900">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="w-4 h-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500 cursor-pointer accent-purple-600"
+                    />
+                    <span className="font-semibold">Zapamiętaj mnie</span>
+                  </label>
+                  <a
+                    href="#forgot"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      alert('Funkcja resetowania hasła zostanie wkrótce udostępniona.');
+                    }}
+                    className="font-bold text-purple-600 hover:text-purple-700 transition-colors"
+                  >
+                    Nie pamiętasz hasła?
+                  </a>
+                </div>
               </div>
             )}
 
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full mt-2 py-3.5 px-6 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-purple-600/25 flex items-center justify-center space-x-2 transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] disabled:opacity-70 cursor-pointer"
+              className="w-full mt-3 py-3.5 px-6 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-bold text-sm rounded-xl shadow-xs flex items-center justify-center space-x-2 transition-colors disabled:opacity-70 cursor-pointer"
             >
               <span>{!isRegister ? 'Zaloguj się do sklepu' : 'Zarejestruj nowe konto'}</span>
               <ArrowRight className="w-4 h-4" />
@@ -289,7 +338,7 @@ export const AuthPage: React.FC = () => {
           </form>
 
           {/* Footer Navigation Switcher */}
-          <div className="text-center text-xs text-slate-600 font-medium pt-2 border-t border-slate-100">
+          <div className="text-center text-xs text-slate-600 font-medium pt-2.5 border-t border-[#EBE6DD]">
             {!isRegister ? (
               <p>
                 Nie masz jeszcze konta?{' '}

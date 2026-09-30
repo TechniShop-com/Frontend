@@ -14,6 +14,16 @@ export default {
           purple: '#8B5CF6',
           dark: '#0B0F19',
         },
+        cream: {
+          canvas: '#FAF7F2',
+          surface: '#FFFFFF',
+          border: '#EBE6DD',
+          nav: '#EFECE4',
+          'nav-border': '#E2DDD3',
+          'nav-input': '#E4DFD5',
+          footer: '#F5F2EB',
+          'footer-border': '#E7E2D8',
+        },
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
