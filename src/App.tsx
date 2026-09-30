@@ -1,24 +1,25 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
 import { Navbar } from './components/Navbar';
+import { Logo } from './components/Logo';
 import { HomePage } from './pages/HomePage';
+import { ProductsPage } from './pages/ProductsPage';
 import { ProductDetailPage } from './pages/ProductDetailPage';
 import { CartPage } from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 
 export const App: React.FC = () => {
-  const [activeBrand, setActiveBrand] = useState('TECHNI_SCHOOLS');
-
   return (
     <CartProvider>
       <Router>
         <div className="min-h-screen bg-gray-50 text-slate-900 font-sans flex flex-col justify-between selection:bg-purple-500 selection:text-white">
           <div className="flex-1">
-            <Navbar activeBrand={activeBrand} setActiveBrand={setActiveBrand} />
+            <Navbar />
             <main>
               <Routes>
-                <Route path="/" element={<HomePage activeBrand={activeBrand} />} />
+                <Route path="/" element={<HomePage />} />
+                <Route path="/products" element={<ProductsPage />} />
                 <Route path="/product/:id" element={<ProductDetailPage />} />
                 <Route path="/cart" element={<CartPage />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
@@ -34,24 +35,17 @@ export const App: React.FC = () => {
             <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 relative z-10 text-xs">
               
               {/* Brand Logo & Name */}
-              <Link to="/" className="flex items-center space-x-3 group">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-600 via-purple-500 to-indigo-600 flex items-center justify-center font-black text-xl text-white shadow-md shadow-purple-500/20 group-hover:scale-105 transition-all duration-300">
-                  T
-                </div>
-                <div>
-                  <span className="text-lg font-black tracking-tight text-slate-900 block">
-                    Techni<span className="text-purple-600">Shop</span>
-                  </span>
-                  <span className="text-[11px] text-slate-500 font-bold tracking-wide">
-                    Techni Schools & Techni Zdalni
-                  </span>
-                </div>
+              <Link to="/" className="shrink-0">
+                <Logo size="md" showSubtitle />
               </Link>
 
               {/* Navigation Links */}
               <div className="flex items-center space-x-8 font-extrabold text-slate-700">
                 <Link to="/" className="hover:text-purple-600 transition-colors duration-200 hover:scale-105">
                   Strona Główna
+                </Link>
+                <Link to="/products" className="hover:text-purple-600 transition-colors duration-200 hover:scale-105">
+                  Produkty
                 </Link>
                 <Link to="/cart" className="hover:text-purple-600 transition-colors duration-200 hover:scale-105">
                   Koszyk

@@ -1,25 +1,50 @@
-import React, { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from 'react';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { ShoppingBag, Search, GraduationCap, Laptop, Sparkles, Zap } from 'lucide-react';
+import { ShoppingBag, Search, ChevronDown, Sparkle, User, Users } from 'lucide-react';
+import { Logo } from './Logo';
 
 interface NavbarProps {
-  activeBrand: string;
-  setActiveBrand: (brand: string) => void;
+  activeBrand?: string;
+  setActiveBrand?: (brand: string) => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ activeBrand, setActiveBrand }) => {
+export const Navbar: React.FC<NavbarProps> = () => {
   const { cart } = useCart();
   const location = useLocation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [navSearch, setNavSearch] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
+  const activeCategory = searchParams.get('category') || 'all';
   const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (navSearch.trim()) {
-      navigate(`/?search=${encodeURIComponent(navSearch)}`);
+      navigate(`/products?search=${encodeURIComponent(navSearch)}`);
+    }
+  };
+
+  const handleCategorySelect = (category: string) => {
+    setIsDropdownOpen(false);
+    if (category === 'all') {
+      navigate('/products');
+    } else {
+      navigate(`/products?category=${category}`);
     }
   };
 
@@ -27,68 +52,114 @@ export const Navbar: React.FC<NavbarProps> = ({ activeBrand, setActiveBrand }) =
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-purple-100 shadow-sm transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 py-3.5 flex items-center justify-between gap-4">
         {/* Brand Logo */}
-        <Link to="/" className="flex items-center space-x-3 group shrink-0">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-600 via-purple-500 to-indigo-600 flex items-center justify-center font-black text-xl text-white shadow-lg shadow-purple-500/30 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 animate-float">
-            <Sparkles className="w-4 h-4 absolute -top-1 -right-1 text-yellow-300 animate-spin-slow" />
-            T
-          </div>
-          <div>
-            <span className="text-xl font-black tracking-tight text-gray-900">
-              Techni<span className="text-purple-600">Shop</span>
-            </span>
-            <div className="text-[10px] text-purple-600 font-bold tracking-widest uppercase -mt-0.5 flex items-center space-x-1">
-              <Zap className="w-3 h-3 text-purple-500 animate-bounce" />
-              <span>{activeBrand === 'TECHNI_ZDALNI' ? 'Techni Zdalni' : 'Techni Schools'}</span>
-            </div>
-          </div>
+        <Link to="/" className="shrink-0">
+          <Logo size="md" />
         </Link>
 
-        {/* Center Navigation Links & Brand Switcher */}
-        <div className="hidden md:flex items-center space-x-8 text-sm font-extrabold">
+        {/* Center Navigation Links & Produkty Dropdown */}
+        <div className="hidden md:flex items-center space-x-6 text-sm font-extrabold">
           <Link
             to="/"
             className={`transition-all duration-300 hover:scale-105 ${
-              location.pathname === '/' ? 'text-purple-600 font-black border-b-2 border-purple-600 pb-1' : 'text-gray-700 hover:text-purple-600'
+              location.pathname === '/' && activeCategory === 'all' && !searchParams.get('search')
+                ? 'text-purple-600 font-black'
+                : 'text-gray-700 hover:text-purple-600'
             }`}
           >
-            Oferta
+            Strona Główna
           </Link>
 
-          {/* Brand Switcher Pills */}
-          <div className="flex items-center space-x-1 bg-purple-50 p-1 rounded-full border border-purple-100 text-xs font-bold shadow-inner">
+          {/* PRODUKTY DROPDOWN (Kobiety / Mężczyźni) */}
+          <div
+            className="relative"
+            ref={dropdownRef}
+            onMouseEnter={() => setIsDropdownOpen(true)}
+            onMouseLeave={() => setIsDropdownOpen(false)}
+          >
             <button
-              onClick={() => setActiveBrand('TECHNI_SCHOOLS')}
-              className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full transition-all duration-300 ${
-                activeBrand === 'TECHNI_SCHOOLS'
-                  ? 'bg-purple-600 text-white font-black shadow-md shadow-purple-600/30 scale-105'
-                  : 'text-gray-600 hover:text-purple-600'
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className={`flex items-center space-x-1.5 py-2 px-3 rounded-xl transition-all duration-300 ${
+                activeCategory === 'kobiety' || activeCategory === 'mezczyzni'
+                  ? 'text-purple-600 bg-purple-50 font-black'
+                  : 'text-gray-700 hover:text-purple-600 hover:bg-purple-50/60'
               }`}
             >
-              <GraduationCap className="w-3.5 h-3.5 animate-bounce" />
-              <span>Techni Schools</span>
+              <span>Produkty</span>
+              <ChevronDown
+                className={`w-4 h-4 transition-transform duration-300 ${
+                  isDropdownOpen ? 'rotate-180 text-purple-600' : 'text-gray-400'
+                }`}
+              />
             </button>
 
-            <button
-              onClick={() => setActiveBrand('TECHNI_ZDALNI')}
-              className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full transition-all duration-300 ${
-                activeBrand === 'TECHNI_ZDALNI'
-                  ? 'bg-purple-600 text-white font-black shadow-md shadow-purple-600/30 scale-105'
-                  : 'text-gray-600 hover:text-purple-600'
-              }`}
-            >
-              <Laptop className="w-3.5 h-3.5 animate-bounce" />
-              <span>Techni Zdalni</span>
-            </button>
+            {/* Dropdown Menu Popup */}
+            {isDropdownOpen && (
+              <div className="absolute top-full left-0 mt-1 w-56 bg-white/95 backdrop-blur-2xl border border-purple-100 rounded-2xl shadow-2xl shadow-purple-900/15 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200 divide-y divide-purple-50">
+                <div className="p-1 space-y-1">
+                  <button
+                    onClick={() => handleCategorySelect('all')}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                      activeCategory === 'all'
+                        ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
+                        : 'text-slate-700 hover:bg-purple-50 hover:text-purple-600'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <Sparkle className="w-3.5 h-3.5" />
+                      <span>Wszystkie Produkty</span>
+                    </div>
+                  </button>
+                </div>
+
+                <div className="p-1 space-y-1">
+                  {/* Kobiety */}
+                  <button
+                    onClick={() => handleCategorySelect('kobiety')}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                      activeCategory === 'kobiety'
+                        ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
+                        : 'text-slate-700 hover:bg-purple-50 hover:text-purple-600'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <span className="w-2 h-2 rounded-full bg-pink-500 animate-pulse" />
+                      <span>Kobiety</span>
+                    </div>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-pink-100 text-pink-700 font-extrabold">
+                      Damskie
+                    </span>
+                  </button>
+
+                  {/* Mężczyźni */}
+                  <button
+                    onClick={() => handleCategorySelect('mezczyzni')}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                      activeCategory === 'mezczyzni'
+                        ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
+                        : 'text-slate-700 hover:bg-purple-50 hover:text-purple-600'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                      <span>Mężczyźni</span>
+                    </div>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-extrabold">
+                      Męskie
+                    </span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Right Search Input & Cart Trigger (Matching Reference Image) */}
+        {/* Right Search Input & Cart Trigger */}
         <div className="flex items-center space-x-4">
           <form onSubmit={handleSearchSubmit} className="relative hidden sm:block w-48 lg:w-64">
             <Search className="w-4 h-4 absolute left-3 top-2.5 text-purple-400" />
             <input
               type="text"
-              placeholder="Szukaj..."
+              placeholder="Szukaj produktów..."
               value={navSearch}
               onChange={(e) => setNavSearch(e.target.value)}
               className="w-full pl-9 pr-3 py-2 text-xs bg-purple-50/70 border border-purple-200 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white text-gray-800 font-medium transition-all"

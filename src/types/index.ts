@@ -1,4 +1,5 @@
 export type BrandType = 'TECHNI_SCHOOLS' | 'TECHNI_ZDALNI';
+export type GenderType = 'WOMEN' | 'MEN' | 'UNISEX';
 
 export interface Product {
   id: string;
@@ -6,6 +7,7 @@ export interface Product {
   description: string;
   price: number;
   brand: BrandType;
+  gender: GenderType;
   colors: string[];
   sizes: string[];
   imageUrl: string;

@@ -1,36 +1,53 @@
-import React, { useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import React, { useState, useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { MOCK_PRODUCTS } from '../mockData';
-import { ShoppingBag, Star, Sparkles, Zap, Check, ArrowRight } from 'lucide-react';
 import { useCart } from '../context/CartContext';
-import { HeroSlider } from '../components/HeroSlider';
+import { ShoppingBag, Star, Zap, Search, ArrowUpDown, Check } from 'lucide-react';
 
-interface HomePageProps {
-  activeBrand?: string;
-}
-
-export const HomePage: React.FC<HomePageProps> = () => {
+export const ProductsPage: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { addToCart } = useCart();
-  const querySearch = searchParams.get('search') || '';
-  const categoryParam = searchParams.get('category') || 'all';
 
+  const categoryParam = searchParams.get('category') || 'all';
+  const querySearch = searchParams.get('search') || '';
+  const [sortBy, setSortBy] = useState<'default' | 'price-asc' | 'price-desc'>('default');
   const [quickNotice, setQuickNotice] = useState<string | null>(null);
 
-  const filteredProducts = MOCK_PRODUCTS.filter((p) => {
-    let matchesCategory = true;
-    if (categoryParam === 'kobiety') {
-      matchesCategory = p.gender === 'WOMEN' || p.gender === 'UNISEX';
-    } else if (categoryParam === 'mezczyzni') {
-      matchesCategory = p.gender === 'MEN' || p.gender === 'UNISEX';
+  const filteredProducts = useMemo(() => {
+    let result = MOCK_PRODUCTS.filter((p) => {
+      let matchesCategory = true;
+      if (categoryParam === 'kobiety') {
+        matchesCategory = p.gender === 'WOMEN' || p.gender === 'UNISEX';
+      } else if (categoryParam === 'mezczyzni') {
+        matchesCategory = p.gender === 'MEN' || p.gender === 'UNISEX';
+      }
+
+      const matchesQuery =
+        !querySearch ||
+        p.title.toLowerCase().includes(querySearch.toLowerCase()) ||
+        p.description.toLowerCase().includes(querySearch.toLowerCase());
+
+      return matchesCategory && matchesQuery;
+    });
+
+    if (sortBy === 'price-asc') {
+      result = [...result].sort((a, b) => a.price - b.price);
+    } else if (sortBy === 'price-desc') {
+      result = [...result].sort((a, b) => b.price - a.price);
     }
-    const matchesQuery =
-      !querySearch ||
-      p.title.toLowerCase().includes(querySearch.toLowerCase()) ||
-      p.description.toLowerCase().includes(querySearch.toLowerCase());
-    return matchesCategory && matchesQuery;
-  });
+
+    return result;
+  }, [categoryParam, querySearch, sortBy]);
+
+  const handleCategorySelect = (cat: string) => {
+    if (cat === 'all') {
+      searchParams.delete('category');
+    } else {
+      searchParams.set('category', cat);
+    }
+    setSearchParams(searchParams);
+  };
 
   const handleQuickAdd = (e: React.MouseEvent, product: typeof MOCK_PRODUCTS[0]) => {
     e.stopPropagation();
@@ -40,14 +57,8 @@ export const HomePage: React.FC<HomePageProps> = () => {
   };
 
   return (
-    <div className="space-y-12 pb-16">
-      {/* HERO BANNER SLIDER WITH OVERLAY TEXT */}
-      <section className="w-[95%] mx-auto pt-6">
-        <HeroSlider />
-      </section>
-
-
-      {/* QUICK NOTICE TOAST */}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      {/* Toast Notice */}
       {quickNotice && (
         <div className="fixed bottom-6 right-6 z-50 bg-purple-600 text-white px-6 py-3 rounded-2xl shadow-2xl font-black text-xs flex items-center space-x-2 anim-wiggle">
           <Check className="w-5 h-5 text-yellow-300" />
@@ -55,31 +66,22 @@ export const HomePage: React.FC<HomePageProps> = () => {
         </div>
       )}
 
-      {/* FEATURED PRODUCTS SECTION */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        <div className="flex items-center justify-between border-b border-purple-100 pb-4">
-          <div>
-            <h2 className="text-2xl font-black text-gray-900 tracking-tight flex items-center space-x-2">
-              <Zap className="w-6 h-6 text-purple-600" />
-              <span>Bestsellery i Nowości</span>
-            </h2>
-            <p className="text-xs text-gray-500 mt-1 font-medium">
-              Kliknij w dowolny produkt, aby przejść do karty produktu i szczegółów.
-            </p>
-          </div>
-
-          <Link
-            to="/products"
-            className="text-xs font-extrabold text-purple-600 hover:text-purple-800 flex items-center space-x-1 hover:underline"
+      {/* Product Grid - Clean, Clickable Cards */}
+      {filteredProducts.length === 0 ? (
+        <div className="bg-white rounded-3xl border border-purple-100 p-12 text-center space-y-4 shadow-sm">
+          <Zap className="w-12 h-12 mx-auto text-purple-400" />
+          <h3 className="text-lg font-black text-slate-900">Brak produktów spełniających kryteria</h3>
+          <p className="text-xs text-slate-500">Spróbuj zmienić kategorię lub wyczyścić wyszukiwanie.</p>
+          <button
+            onClick={() => handleCategorySelect('all')}
+            className="px-5 py-2.5 bg-purple-600 text-white rounded-xl font-bold text-xs shadow-md shadow-purple-600/30"
           >
-            <span>Zobacz wszystko</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+            Pokaż wszystkie produkty
+          </button>
         </div>
-
-        {/* Product Cards Layout - Clean, Static & Fully Clickable (No Floating Animation) */}
+      ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {MOCK_PRODUCTS.slice(0, 4).map((product) => (
+          {filteredProducts.map((product) => (
             <div
               key={product.id}
               onClick={() => navigate(`/product/${product.id}`)}
@@ -118,6 +120,14 @@ export const HomePage: React.FC<HomePageProps> = () => {
                 </h3>
                 <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">{product.description}</p>
 
+                {/* Color preview tags */}
+                <div className="pt-1 flex items-center space-x-1">
+                  <span className="text-[10px] text-gray-400 font-bold uppercase">Warianty:</span>
+                  <span className="text-[11px] font-semibold text-purple-700">
+                    {product.colors.join(', ')}
+                  </span>
+                </div>
+
                 <div className="text-xl font-black text-gray-900 pt-2 flex items-baseline justify-between">
                   <span>{product.price.toFixed(2)} zł</span>
                   <span className="text-[10px] font-bold text-purple-600">Darmowa dostawa</span>
@@ -137,18 +147,8 @@ export const HomePage: React.FC<HomePageProps> = () => {
             </div>
           ))}
         </div>
-
-        {/* Bottom CTA to full products page */}
-        <div className="text-center pt-4">
-          <Link
-            to="/products"
-            className="inline-flex items-center space-x-2 px-8 py-3.5 bg-white border border-purple-200 text-purple-700 hover:bg-purple-50 rounded-2xl font-black text-xs shadow-sm hover:scale-105 transition-all"
-          >
-            <span>ZOBACZ WSZYSTKIE PRODUKTY</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-      </section>
+      )}
     </div>
   );
 };
+export default ProductsPage;
