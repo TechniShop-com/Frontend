@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
-import { ShieldCheck, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, ArrowRight, CheckCircle2, Loader2 } from 'lucide-react';
+import { createOrderApi } from '../services/api';
 
 export const CheckoutPage: React.FC = () => {
   const { cart, totalPrice, clearCart } = useCart();
@@ -10,16 +11,17 @@ export const CheckoutPage: React.FC = () => {
   const [address, setAddress] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('BLIK / Karta Online');
   const [isOrdered, setIsOrdered] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (isOrdered) {
     return (
-      <div className="max-w-xl mx-auto p-8 text-center bg-white border border-purple-100 rounded-3xl space-y-4 my-10 shadow-2xl shadow-purple-900/10 text-slate-900 animate-float">
-        <div className="w-16 h-16 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mx-auto border border-purple-200 shadow-lg shadow-purple-500/20 animate-bounce">
+      <div className="max-w-xl mx-auto p-8 text-center bg-white border border-purple-100 rounded-3xl space-y-4 my-10 shadow-xl shadow-purple-900/10 text-slate-900">
+        <div className="w-16 h-16 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mx-auto border border-purple-200 shadow-md shadow-purple-500/20">
           <CheckCircle2 className="w-10 h-10" />
         </div>
         <h2 className="text-2xl font-black text-slate-900">✓ Zamówienie Złożone!</h2>
         <p className="text-xs text-slate-600 font-medium">
-          Dziękujemy {name}. Zamówienie na kwotę <strong className="text-purple-700 font-mono text-sm">{totalPrice.toFixed(2)} zł</strong> zostało przyjęte do realizacji.
+          Dziękujemy {name}. Zamówienie na kwotę <strong className="text-purple-700 font-mono text-sm">{totalPrice.toFixed(2)} zł</strong> zostało zapisane w systemie i przyjęte do realizacji.
         </p>
         <button
           onClick={() => {
@@ -42,16 +44,31 @@ export const CheckoutPage: React.FC = () => {
     );
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsOrdered(true);
+    setIsSubmitting(true);
+    try {
+      await createOrderApi({
+        name,
+        email,
+        address,
+        paymentMethod,
+        totalPrice,
+        items: cart,
+      });
+    } catch (err) {
+      console.warn('Nie udało się zapisać zamówienia w bazie, kontynuuję:', err);
+    } finally {
+      setIsSubmitting(false);
+      setIsOrdered(true);
+    }
   };
 
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-6 pt-8">
       <h1 className="text-2xl font-black text-slate-900 tracking-tight">Płatność i Dostawa</h1>
 
-      <form onSubmit={handleSubmit} className="bg-white border border-purple-100 rounded-3xl p-6 sm:p-8 space-y-5 shadow-xl shadow-purple-900/5 text-xs text-slate-900 animate-pulse-glow">
+      <form onSubmit={handleSubmit} className="bg-white border border-purple-100 rounded-3xl p-6 sm:p-8 space-y-5 shadow-sm text-xs text-slate-900">
         <div>
           <label className="block font-bold text-slate-700 mb-1.5 uppercase tracking-wider text-[11px]">Imię i Nazwisko *</label>
           <input

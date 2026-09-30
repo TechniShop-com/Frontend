@@ -1,45 +1,101 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { CartItem, Product } from '../types';
+import { getCart, addToCartApi, removeCartItemApi, clearCartApi } from '../services/api';
 
 interface CartContextType {
   cart: CartItem[];
-  addToCart: (product: Product, color: string, size: string) => void;
-  removeFromCart: (index: number) => void;
-  clearCart: () => void;
+  addToCart: (product: Product, color: string, size: string, quantity?: number) => Promise<void>;
+  removeFromCart: (indexOrId: number) => Promise<void>;
+  clearCart: () => Promise<void>;
   totalPrice: number;
+  isLoading: boolean;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('technishop_cart');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
-  const addToCart = (product: Product, color: string, size: string) => {
+  // Synchronizacja z backendem przy starcie
+  useEffect(() => {
+    const syncCart = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getCart();
+        if (data && Array.isArray(data.items) && data.items.length > 0) {
+          setCart(data.items);
+        }
+      } catch (err) {
+        console.warn('Backend cart not reachable, using local storage cart.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    syncCart();
+  }, []);
+
+  // Zapis do localStorage przy każdej zmianie
+  useEffect(() => {
+    localStorage.setItem('technishop_cart', JSON.stringify(cart));
+  }, [cart]);
+
+  const addToCart = async (product: Product, color: string, size: string, quantity: number = 1) => {
+    // Aktualizacja optymistyczna stanu lokalnego
     setCart((prev) => {
       const existing = prev.find(
         (item) => item.product.id === product.id && item.selectedColor === color && item.selectedSize === size
       );
       if (existing) {
         return prev.map((item) =>
-          item === existing ? { ...item, quantity: item.quantity + 1 } : item
+          item === existing ? { ...item, quantity: item.quantity + quantity } : item
         );
       }
-      return [...prev, { product, selectedColor: color, selectedSize: size, quantity: 1 }];
+      return [...prev, { product, selectedColor: color, selectedSize: size, quantity }];
     });
+
+    // Wysłanie zapytania do backendu
+    try {
+      await addToCartApi(product.id, color, size, quantity);
+    } catch (err) {
+      console.warn('Nie udało się zapisać do bazy backendu (działa w trybie lokalnym):', err);
+    }
   };
 
-  const removeFromCart = (index: number) => {
-    setCart((prev) => prev.filter((_, i) => i !== index));
+  const removeFromCart = async (indexOrId: number) => {
+    const itemToRemove = cart[indexOrId] || cart.find((item) => item.id === indexOrId);
+
+    setCart((prev) => prev.filter((item, i) => i !== indexOrId && item.id !== indexOrId));
+
+    if (itemToRemove && itemToRemove.id) {
+      try {
+        await removeCartItemApi(itemToRemove.id);
+      } catch (err) {
+        console.warn('Błąd usuwania pozycji z bazy backendu:', err);
+      }
+    }
   };
 
-  const clearCart = () => {
+  const clearCart = async () => {
     setCart([]);
+    try {
+      await clearCartApi();
+    } catch (err) {
+      console.warn('Błąd czyszczenia koszyka w backendzie:', err);
+    }
   };
 
   const totalPrice = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ cart, addToCart, removeFromCart, clearCart, totalPrice }}>
+    <CartContext.Provider value={{ cart, addToCart, removeFromCart, clearCart, totalPrice, isLoading }}>
       {children}
     </CartContext.Provider>
   );

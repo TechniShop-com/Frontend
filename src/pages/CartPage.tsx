@@ -17,18 +17,18 @@ export const CartPage: React.FC = () => {
       </h1>
 
       {cart.length === 0 ? (
-        <div className="bg-white p-12 rounded-3xl border border-purple-100 text-center space-y-4 shadow-xl shadow-purple-900/5 anim-hero-product">
-          <ShoppingBag className="w-16 h-16 mx-auto text-purple-500 stroke-[1.5] anim-wiggle" />
+        <div className="bg-white p-12 rounded-3xl border border-purple-100 text-center space-y-4 shadow-sm">
+          <ShoppingBag className="w-16 h-16 mx-auto text-purple-500 stroke-[1.5]" />
           <p className="text-sm font-semibold text-slate-600">Koszyk jest obecnie pusty.</p>
           <Link
-            to="/"
-            className="inline-block px-6 py-3 text-xs font-extrabold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl shadow-lg shadow-purple-500/25 hover:scale-105 transition-all anim-pulse-glow"
+            to="/products"
+            className="inline-block px-6 py-3 text-xs font-extrabold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl shadow-md shadow-purple-500/25 hover:scale-105 transition-all"
           >
             Przejdź do oferty
           </Link>
         </div>
       ) : (
-        <div className="bg-white border border-purple-100 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl shadow-purple-900/5 text-slate-900 anim-breathe">
+        <div className="bg-white border border-purple-100 rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm text-slate-900">
           <div className="space-y-4 divide-y divide-purple-100">
             {cart.map((item, index) => (
               <div key={index} className="pt-4 first:pt-0 flex items-center justify-between text-xs">
@@ -36,7 +36,7 @@ export const CartPage: React.FC = () => {
                   <img
                     src={item.product.imageUrl}
                     alt={item.product.title}
-                    className="w-16 h-16 object-cover rounded-xl border border-purple-100 bg-purple-50 hover:scale-110 transition-transform duration-300"
+                    className="w-16 h-16 object-cover rounded-xl border border-purple-100 bg-purple-50 hover:scale-105 transition-transform duration-200"
                   />
                   <div>
                     <h4 className="font-extrabold text-sm text-slate-900">{item.product.title}</h4>
@@ -55,6 +55,7 @@ export const CartPage: React.FC = () => {
                   <button
                     onClick={() => removeFromCart(index)}
                     className="text-gray-400 hover:text-red-500 p-1.5 transition-colors hover:scale-110"
+                    title="Usuń z koszyka"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -65,17 +66,17 @@ export const CartPage: React.FC = () => {
 
           <div className="border-t border-purple-100 pt-4 flex justify-between items-center text-sm">
             <span className="font-bold text-slate-600">Razem do zapłaty:</span>
-            <span className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600 animate-pulse">
+            <span className="text-2xl font-black text-purple-700">
               {totalPrice.toFixed(2)} zł
             </span>
           </div>
 
           <button
             onClick={() => navigate('/checkout')}
-            className="w-full py-4 px-6 text-xs font-black text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-500 hover:to-indigo-500 rounded-xl shadow-lg shadow-purple-500/25 flex items-center justify-center space-x-2 transition-all duration-300 hover:scale-[1.02]"
+            className="w-full py-4 px-6 text-xs font-black text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-500 hover:to-indigo-500 rounded-xl shadow-lg shadow-purple-500/25 flex items-center justify-center space-x-2 transition-all duration-300 hover:scale-[1.01] active:scale-95"
           >
             <span>Przejdź do Płatności i Dostawy</span>
-            <ArrowRight className="w-4 h-4 animate-bounce" />
+            <ArrowRight className="w-4 h-4" />
           </button>
         </div>
       )}

@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { MOCK_PRODUCTS } from '../mockData';
+import { Product } from '../types';
+import { getProductById } from '../services/api';
 import { useCart } from '../context/CartContext';
 import {
   ArrowLeft,
@@ -24,13 +26,31 @@ export const ProductDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
 
-  const product = MOCK_PRODUCTS.find((p) => p.id === id) || MOCK_PRODUCTS[0];
-
+  const [product, setProduct] = useState<Product>(() => {
+    return MOCK_PRODUCTS.find((p) => p.id === id) || MOCK_PRODUCTS[0];
+  });
   const [selectedColor, setSelectedColor] = useState<string>(product.colors[0] || 'Domyślny');
   const [selectedSize, setSelectedSize] = useState<string>(product.sizes[0] || 'M');
   const [quantity, setQuantity] = useState<number>(1);
   const [activeTab, setActiveTab] = useState<'opis' | 'parametry' | 'rozmiary' | 'dostawa' | 'opinie'>('opis');
   const [addedNotice, setAddedNotice] = useState(false);
+
+  useEffect(() => {
+    if (!id) return;
+    const fetchProduct = async () => {
+      try {
+        const data = await getProductById(id);
+        if (data) {
+          setProduct(data);
+          setSelectedColor(data.colors[0] || 'Domyślny');
+          setSelectedSize(data.sizes[0] || 'M');
+        }
+      } catch (err) {
+        console.warn('Backend niedostępny, używam produktu mock:', err);
+      }
+    };
+    fetchProduct();
+  }, [id]);
 
   const handleAdd = () => {
     for (let i = 0; i < quantity; i++) {

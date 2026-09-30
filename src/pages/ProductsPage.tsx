@@ -1,8 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { MOCK_PRODUCTS } from '../mockData';
+import { Product } from '../types';
+import { getProducts } from '../services/api';
 import { useCart } from '../context/CartContext';
-import { ShoppingBag, Star, Zap, Search, ArrowUpDown, Check } from 'lucide-react';
+import { ShoppingBag, Star, Zap, Check, Loader2 } from 'lucide-react';
 
 export const ProductsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -14,8 +16,32 @@ export const ProductsPage: React.FC = () => {
   const [sortBy, setSortBy] = useState<'default' | 'price-asc' | 'price-desc'>('default');
   const [quickNotice, setQuickNotice] = useState<string | null>(null);
 
+  const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadProducts = async () => {
+      try {
+        setLoading(true);
+        const data = await getProducts();
+        if (isMounted && data && data.length > 0) {
+          setProducts(data);
+        }
+      } catch (err) {
+        console.warn('Backend niedostępny, używam danych mock:', err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    loadProducts();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const filteredProducts = useMemo(() => {
-    let result = MOCK_PRODUCTS.filter((p) => {
+    let result = products.filter((p) => {
       let matchesCategory = true;
       if (categoryParam === 'kobiety') {
         matchesCategory = p.gender === 'WOMEN' || p.gender === 'UNISEX';
@@ -38,7 +64,7 @@ export const ProductsPage: React.FC = () => {
     }
 
     return result;
-  }, [categoryParam, querySearch, sortBy]);
+  }, [products, categoryParam, querySearch, sortBy]);
 
   const handleCategorySelect = (cat: string) => {
     if (cat === 'all') {
@@ -49,9 +75,9 @@ export const ProductsPage: React.FC = () => {
     setSearchParams(searchParams);
   };
 
-  const handleQuickAdd = (e: React.MouseEvent, product: typeof MOCK_PRODUCTS[0]) => {
+  const handleQuickAdd = async (e: React.MouseEvent, product: Product) => {
     e.stopPropagation();
-    addToCart(product, product.colors[0] || 'Domyślny', product.sizes[0] || 'M');
+    await addToCart(product, product.colors[0] || 'Domyślny', product.sizes[0] || 'M');
     setQuickNotice(`Dodano "${product.title}" do koszyka!`);
     setTimeout(() => setQuickNotice(null), 2500);
   };
@@ -66,8 +92,12 @@ export const ProductsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Product Grid - Clean, Clickable Cards */}
-      {filteredProducts.length === 0 ? (
+      {loading && products.length === 0 ? (
+        <div className="flex justify-center items-center py-24">
+          <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+          <span className="ml-3 font-bold text-sm text-slate-600">Ładowanie produktów z bazy danych...</span>
+        </div>
+      ) : filteredProducts.length === 0 ? (
         <div className="bg-white rounded-3xl border border-purple-100 p-12 text-center space-y-4 shadow-sm">
           <Zap className="w-12 h-12 mx-auto text-purple-400" />
           <h3 className="text-lg font-black text-slate-900">Brak produktów spełniających kryteria</h3>
