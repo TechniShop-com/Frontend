@@ -104,3 +104,13 @@ export const updateUserProfileApi = async (
   const response = await api.put<{ message: string; user: any }>(`/auth/user/${userId}`, data);
   return response.data;
 };
+
+// Logowanie / Rejestracja przez Google
+export const googleAuthApi = async (data: {
+  email: string;
+  name: string;
+  avatarUrl?: string;
+}) => {
+  const response = await api.post<{ message: string; user: any }>('/auth/google', data);
+  return response.data;
+};

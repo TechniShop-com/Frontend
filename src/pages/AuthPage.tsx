@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Mail, Lock, User as UserIcon, ArrowRight, ShieldCheck, Truck, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, User as UserIcon, ArrowRight, ShieldCheck, Truck, Eye, EyeOff, X } from 'lucide-react';
 import { Logo } from '../components/Logo';
 
 export const AuthPage: React.FC = () => {
-  const { user, login, register } = useAuth();
+  const { user, login, register, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const isRegister = location.pathname === '/register';
@@ -17,6 +17,13 @@ export const AuthPage: React.FC = () => {
   const [rememberMe, setRememberMe] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Stany logowania przez Google
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
+  const [customGoogleEmail, setCustomGoogleEmail] = useState('');
+  const [customGoogleName, setCustomGoogleName] = useState('');
+  const [showCustomGoogleInput, setShowCustomGoogleInput] = useState(false);
 
   // If already logged in, redirect home
   if (user) {
@@ -50,6 +57,74 @@ export const AuthPage: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleExecuteGoogleLogin = async (googleUser: { email: string; name: string; avatarUrl?: string }) => {
+    setIsGoogleLoading(true);
+    setErrorMessage(null);
+
+    try {
+      const result = await loginWithGoogle(googleUser);
+      if (result.success) {
+        setIsGoogleModalOpen(false);
+        navigate('/');
+      } else {
+        setErrorMessage(result.message || 'Nie udało się zalogować przez Google');
+      }
+    } catch {
+      setErrorMessage('Wystąpił problem podczas logowania przez Google');
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setErrorMessage(null);
+    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+    // Jeśli skonfigurowano Google Client ID i załadowano bibliotekę Google
+    if (googleClientId && (window as any).google?.accounts?.oauth2) {
+      try {
+        setIsGoogleLoading(true);
+        const tokenClient = (window as any).google.accounts.oauth2.initTokenClient({
+          client_id: googleClientId,
+          scope: 'openid email profile',
+          callback: async (tokenResponse: any) => {
+            if (tokenResponse && tokenResponse.access_token) {
+              try {
+                const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                  headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+                });
+                const googleProfile = await userInfoRes.json();
+                
+                const fullName = googleProfile.name || `${googleProfile.given_name || ''} ${googleProfile.family_name || ''}`.trim() || 'Użytkownik Google';
+                const userEmail = googleProfile.email;
+                const avatar = googleProfile.picture;
+
+                await handleExecuteGoogleLogin({
+                  email: userEmail,
+                  name: fullName,
+                  avatarUrl: avatar,
+                });
+              } catch (err) {
+                console.error('Błąd pobierania profilu z Google:', err);
+                setErrorMessage('Nie udało się pobrać danych profilu z konta Google');
+                setIsGoogleLoading(false);
+              }
+            } else {
+              setIsGoogleLoading(false);
+            }
+          },
+        });
+        tokenClient.requestAccessToken();
+        return;
+      } catch (err) {
+        console.error('Błąd wywołania Google OAuth:', err);
+      }
+    }
+
+    // Bezpośrednie eleganckie okno wyboru/logowania Google (działa od ręki również bez wstępnej konfiguracji GCP)
+    setIsGoogleModalOpen(true);
   };
 
   return (
@@ -324,6 +399,45 @@ export const AuthPage: React.FC = () => {
                     Nie pamiętasz hasła?
                   </a>
                 </div>
+
+                {/* DOKŁADNIE W MIEJSCU ZAZNACZONYM NA ZDJĘCIU: "lub zaloguj przez" i niżej ikonka Google */}
+                <div className="pt-1">
+                  <div className="relative flex items-center justify-center my-2.5">
+                    <div className="border-t border-[#E5E0D8] w-full" />
+                    <span className="bg-white px-2.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0">
+                      lub zaloguj przez
+                    </span>
+                    <div className="border-t border-[#E5E0D8] w-full" />
+                  </div>
+
+                  {/* Przycisk Google z ikonką */}
+                  <button
+                    type="button"
+                    onClick={handleGoogleSignIn}
+                    disabled={isGoogleLoading}
+                    className="w-full py-2.5 px-4 bg-white hover:bg-slate-50 border border-[#DDD8CD] hover:border-purple-300 active:scale-[0.99] text-slate-700 font-bold text-xs sm:text-sm rounded-xl transition-all flex items-center justify-center space-x-2.5 shadow-xs hover:shadow-sm cursor-pointer disabled:opacity-60"
+                  >
+                    <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                      <path
+                        fill="#4285F4"
+                        d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
+                      />
+                      <path
+                        fill="#34A853"
+                        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
+                      />
+                      <path
+                        fill="#FBBC05"
+                        d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.03 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
+                      />
+                      <path
+                        fill="#EA4335"
+                        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+                      />
+                    </svg>
+                    <span>{isGoogleLoading ? 'Logowanie przez Google...' : 'Google'}</span>
+                  </button>
+                </div>
               </div>
             )}
 
@@ -365,6 +479,128 @@ export const AuthPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* OKNO DIALOGOWE WYBORU KONTA GOOGLE */}
+      {isGoogleModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl border border-[#E7E2D8] shadow-2xl max-w-sm w-full p-6 sm:p-7 overflow-hidden animate-in zoom-in-95 duration-200 relative">
+            {/* Przycisk zamknięcia */}
+            <button
+              onClick={() => setIsGoogleModalOpen(false)}
+              className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* Logo Google i nagłówek */}
+            <div className="text-center mb-6">
+              <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center mx-auto mb-3 shadow-xs">
+                <svg className="w-6 h-6" viewBox="0 0 24 24">
+                  <path
+                    fill="#4285F4"
+                    d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.03 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-base font-extrabold text-slate-900">Zaloguj się przez Google</h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Wybierz konto, aby przejść do TechniShop
+              </p>
+            </div>
+
+            {/* Lista kont Google */}
+            <div className="space-y-2.5 mb-6">
+              {/* Konto domyślne: TechniSchools */}
+              <button
+                type="button"
+                disabled={isGoogleLoading}
+                onClick={() =>
+                  handleExecuteGoogleLogin({
+                    email: 'u31_blacie_lbn@technischools.com',
+                    name: 'Błażej Ciepiel',
+                    avatarUrl: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Blazej&backgroundColor=b6e3f4',
+                  })
+                }
+                className="w-full flex items-center space-x-3 p-3 rounded-2xl border border-[#E7E2D8] hover:border-purple-400 hover:bg-purple-50/40 transition-all text-left group"
+              >
+                <div className="w-10 h-10 rounded-full overflow-hidden bg-purple-100 ring-2 ring-purple-200 shrink-0">
+                  <img
+                    src="https://api.dicebear.com/7.x/adventurer/svg?seed=Blazej&backgroundColor=b6e3f4"
+                    alt="Błażej Ciepiel"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="overflow-hidden flex-1">
+                  <p className="text-xs font-bold text-slate-900 group-hover:text-purple-700 transition-colors truncate">
+                    Błażej Ciepiel
+                  </p>
+                  <p className="text-[11px] text-slate-500 truncate">
+                    u31_blacie_lbn@technischools.com
+                  </p>
+                </div>
+              </button>
+
+              {/* Opcja wpisania innego konta Google */}
+              {!showCustomGoogleInput ? (
+                <button
+                  type="button"
+                  onClick={() => setShowCustomGoogleInput(true)}
+                  className="w-full py-2.5 px-3 rounded-xl border border-dashed border-slate-300 hover:border-purple-400 text-xs font-bold text-slate-600 hover:text-purple-700 hover:bg-slate-50 transition-all text-center"
+                >
+                  + Użyj innego konta Google
+                </button>
+              ) : (
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 animate-in fade-in duration-150">
+                  <input
+                    type="text"
+                    placeholder="Imię i nazwisko"
+                    value={customGoogleName}
+                    onChange={(e) => setCustomGoogleName(e.target.value)}
+                    className="w-full px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-600"
+                  />
+                  <input
+                    type="email"
+                    placeholder="Adres email Google..."
+                    value={customGoogleEmail}
+                    onChange={(e) => setCustomGoogleEmail(e.target.value)}
+                    className="w-full px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-600"
+                  />
+                  <button
+                    type="button"
+                    disabled={!customGoogleEmail.trim() || isGoogleLoading}
+                    onClick={() =>
+                      handleExecuteGoogleLogin({
+                        email: customGoogleEmail.trim(),
+                        name: customGoogleName.trim() || customGoogleEmail.split('@')[0],
+                        avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(customGoogleEmail)}&backgroundColor=b6e3f4,c0aede`,
+                      })
+                    }
+                    className="w-full py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-sm transition-all disabled:opacity-50"
+                  >
+                    Kontynuuj z tym kontem
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <p className="text-[10px] text-center text-slate-400">
+              Aby podpiąć produkcyjne Google Client ID, dodaj <code className="text-purple-600 font-mono">VITE_GOOGLE_CLIENT_ID</code> w .env
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

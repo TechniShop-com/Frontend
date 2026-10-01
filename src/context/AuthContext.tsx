@@ -1,12 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types';
-import { loginUserApi, registerUserApi, updateUserProfileApi } from '../services/api';
+import { loginUserApi, registerUserApi, updateUserProfileApi, googleAuthApi } from '../services/api';
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
   register: (name: string, email: string, password: string) => Promise<{ success: boolean; message?: string }>;
+  loginWithGoogle: (data: { email: string; name: string; avatarUrl?: string }) => Promise<{ success: boolean; message?: string }>;
   updateProfile: (data: {
     name?: string;
     email?: string;
@@ -141,6 +142,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const loginWithGoogle = async (data: {
+    email: string;
+    name: string;
+    avatarUrl?: string;
+  }): Promise<{ success: boolean; message?: string }> => {
+    if (!data.email) {
+      return { success: false, message: 'Brak adresu email z konta Google' };
+    }
+
+    try {
+      const result = await googleAuthApi(data);
+      if (result && result.user) {
+        const loggedUser: User = {
+          id: result.user.id,
+          name: result.user.name,
+          email: result.user.email,
+          avatarUrl: result.user.avatarUrl || DEFAULT_AVATAR,
+        };
+        setUser(loggedUser);
+        setIsAuthModalOpen(false);
+        return { success: true, message: result.message };
+      }
+      return { success: false, message: 'Nie udało się zalogować przez Google' };
+    } catch (err: any) {
+      console.error('Błąd logowania przez Google w API:', err);
+      const serverMsg = err.response?.data?.error || err.response?.data?.message;
+      return {
+        success: false,
+        message: serverMsg || 'Błąd połączenia z serwerem podczas logowania przez Google.',
+      };
+    }
+  };
+
   const logout = () => {
     setUser(null);
   };
@@ -161,6 +195,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAuthenticated: !!user,
         login,
         register,
+        loginWithGoogle,
         updateProfile,
         logout,
         isAuthModalOpen,
