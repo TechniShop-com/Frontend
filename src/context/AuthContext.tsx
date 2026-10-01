@@ -1,12 +1,20 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types';
-import { loginUserApi, registerUserApi } from '../services/api';
+import { loginUserApi, registerUserApi, updateUserProfileApi } from '../services/api';
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
   register: (name: string, email: string, password: string) => Promise<{ success: boolean; message?: string }>;
+  updateProfile: (data: {
+    name?: string;
+    email?: string;
+    avatarUrl?: string;
+    password?: string;
+    currentPassword?: string;
+    newPassword?: string;
+  }) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
   isAuthModalOpen: boolean;
   authMode: 'login' | 'register';
@@ -98,6 +106,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updateProfile = async (data: {
+    name?: string;
+    email?: string;
+    avatarUrl?: string;
+    password?: string;
+    currentPassword?: string;
+    newPassword?: string;
+  }): Promise<{ success: boolean; message?: string }> => {
+    if (!user) {
+      return { success: false, message: 'Nie jesteś zalogowany' };
+    }
+
+    try {
+      const result = await updateUserProfileApi(user.id, data);
+      if (result && result.user) {
+        const updatedUser: User = {
+          id: result.user.id,
+          name: result.user.name,
+          email: result.user.email,
+          avatarUrl: result.user.avatarUrl || DEFAULT_AVATAR,
+        };
+        setUser(updatedUser);
+        return { success: true, message: result.message || 'Profil został pomyślnie zaktualizowany' };
+      }
+      return { success: false, message: 'Nie udało się zaktualizować profilu' };
+    } catch (err: any) {
+      console.error('Błąd aktualizacji profilu w API:', err);
+      const serverMsg = err.response?.data?.error || err.response?.data?.message;
+      return {
+        success: false,
+        message: serverMsg || 'Niestety nie udało się zapisać zmian, spróbuj jeszcze raz',
+      };
+    }
+  };
+
   const logout = () => {
     setUser(null);
   };
@@ -118,6 +161,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAuthenticated: !!user,
         login,
         register,
+        updateProfile,
         logout,
         isAuthModalOpen,
         authMode,

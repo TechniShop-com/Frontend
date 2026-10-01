@@ -88,3 +88,19 @@ export const loginUserApi = async (email: string, password: string) => {
   });
   return response.data;
 };
+
+// Aktualizacja profilu użytkownika
+export const updateUserProfileApi = async (
+  userId: string,
+  data: {
+    name?: string;
+    email?: string;
+    avatarUrl?: string;
+    password?: string;
+    currentPassword?: string;
+    newPassword?: string;
+  }
+) => {
+  const response = await api.put<{ message: string; user: any }>(`/auth/user/${userId}`, data);
+  return response.data;
+};

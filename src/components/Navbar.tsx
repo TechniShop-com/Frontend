@@ -15,6 +15,7 @@ import {
   ArrowRight,
   Flame,
   Package,
+  Settings,
 } from 'lucide-react';
 import { Logo } from './Logo';
 
@@ -422,6 +423,14 @@ export const Navbar: React.FC<NavbarProps> = () => {
                   </div>
 
                   <div className="pt-2 space-y-1">
+                    <Link
+                      to="/settings"
+                      onClick={() => setIsUserMenuOpen(false)}
+                      className="w-full flex items-center space-x-2 px-3 py-2 text-xs font-semibold text-slate-700 hover:text-purple-600 hover:bg-purple-50/70 rounded-xl transition-colors"
+                    >
+                      <Settings className="w-4 h-4 text-purple-600" />
+                      <span>Ustawienia konta</span>
+                    </Link>
                     <button
                       onClick={() => {
                         setIsUserMenuOpen(false);

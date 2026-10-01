@@ -11,18 +11,21 @@ import { ProductDetailPage } from './pages/ProductDetailPage';
 import { CartPage } from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { AuthPage } from './pages/AuthPage';
+import { SettingsPage } from './pages/SettingsPage';
 import { useLocation } from 'react-router-dom';
 
 const AppLayout: React.FC = () => {
   const location = useLocation();
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+  const isSettingsPage = location.pathname === '/settings' || location.pathname === '/account';
+  const isFullscreen = isAuthPage || isSettingsPage;
 
   return (
-    <div className={`min-h-screen bg-[#FAF7F2] text-slate-900 font-sans flex flex-col ${isAuthPage ? 'lg:h-screen lg:overflow-hidden' : 'justify-between'} selection:bg-purple-600 selection:text-white`}>
+    <div className={`min-h-screen bg-[#FAF7F2] text-slate-900 font-sans flex flex-col ${isFullscreen ? 'h-screen overflow-hidden' : 'justify-between'} selection:bg-purple-600 selection:text-white`}>
       <CartDrawer />
-      <div className="flex-1 flex flex-col h-full">
-        <Navbar />
-        <main className="flex-1 flex flex-col h-full">
+      <div className="flex-1 flex flex-col h-full overflow-hidden">
+        {!isSettingsPage && <Navbar />}
+        <main className={`flex-1 flex flex-col h-full ${isSettingsPage ? 'overflow-hidden' : ''}`}>
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/products" element={<ProductsPage />} />
@@ -31,12 +34,14 @@ const AppLayout: React.FC = () => {
             <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/login" element={<AuthPage />} />
             <Route path="/register" element={<AuthPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/account" element={<SettingsPage />} />
           </Routes>
         </main>
       </div>
 
       {/* SINGLE UNIFIED CLEAN PURPLE & WARM CREAM FOOTER BAR */}
-      {!isAuthPage && (
+      {!isFullscreen && (
         <footer className="bg-[#F5F2EB] border-t border-[#E7E2D8] py-6 sm:py-8 px-6 relative overflow-hidden mt-12">
           {/* Subtle Background Glow */}
           <div className="absolute top-0 right-1/4 w-96 h-24 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
