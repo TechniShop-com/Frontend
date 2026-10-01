@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
+import { CartDrawer } from './components/CartDrawer';
 import { Logo } from './components/Logo';
 import { HomePage } from './pages/HomePage';
 import { ProductsPage } from './pages/ProductsPage';
@@ -18,6 +19,7 @@ const AppLayout: React.FC = () => {
 
   return (
     <div className={`min-h-screen bg-[#FAF7F2] text-slate-900 font-sans flex flex-col ${isAuthPage ? 'lg:h-screen lg:overflow-hidden' : 'justify-between'} selection:bg-purple-600 selection:text-white`}>
+      <CartDrawer />
       <div className="flex-1 flex flex-col h-full">
         <Navbar />
         <main className="flex-1 flex flex-col h-full">

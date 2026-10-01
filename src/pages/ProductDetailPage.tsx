@@ -276,25 +276,49 @@ export const ProductDetailPage: React.FC = () => {
             </button>
           </div>
 
-          {/* Delivery Options (Allegro Box) */}
-          <div className="bg-[#FAF7F2] rounded-2xl p-4 border border-[#EBE6DD] space-y-2.5 text-xs">
-            <div className="font-bold text-slate-800 flex items-center justify-between">
-              <span>Sposoby dostawy:</span>
-              <span className="text-purple-600 font-bold">od 0,00 zł</span>
+          {/* Delivery & Payment Polish Trust Box (Allegro / Reserved style) */}
+          <div className="bg-[#FAF7F2] rounded-2xl p-4 border border-[#E3DDD2] space-y-3 text-xs">
+            <div className="font-extrabold text-slate-900 flex items-center justify-between pb-2 border-b border-[#EAE4D9]">
+              <span className="flex items-center gap-1.5">
+                <Truck className="w-4 h-4 text-purple-700" />
+                <span>Opcje dostawy i płatności</span>
+              </span>
+              <span className="text-purple-700 font-black">Darmowa od 200 zł</span>
             </div>
-            <div className="space-y-1.5 text-[11px] text-slate-600 font-medium">
-              <div className="flex justify-between">
-                <span>• Odbiór osobisty w szkole</span>
-                <span className="font-semibold text-emerald-600">0,00 zł (Darmowy)</span>
+
+            <div className="space-y-2 text-[11px] text-slate-600 font-medium">
+              <div className="flex justify-between items-center bg-white p-2 rounded-xl border border-[#E7E2D8]">
+                <span className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-yellow-400 inline-block shrink-0 shadow-2xs" />
+                  <span>Paczkomaty InPost (Dostawa w 24h)</span>
+                </span>
+                <span className="font-extrabold text-slate-900">
+                  {product.price * quantity >= 200 ? (
+                    <span className="text-emerald-600">0.00 zł</span>
+                  ) : (
+                    '14.99 zł'
+                  )}
+                </span>
               </div>
-              <div className="flex justify-between">
-                <span>• Paczkomaty InPost (Dostawa jutro)</span>
-                <span className="font-semibold text-slate-900">9,99 zł (Smart! 0 zł)</span>
+
+              <div className="flex justify-between items-center bg-white p-2 rounded-xl border border-[#E7E2D8]">
+                <span className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-purple-600 inline-block shrink-0 shadow-2xs" />
+                  <span>Odbiór osobisty w szkole</span>
+                </span>
+                <span className="font-extrabold text-emerald-600">0.00 zł (Darmowy)</span>
               </div>
-              <div className="flex justify-between">
-                <span>• Kurier DPD / DHL</span>
-                <span className="font-semibold text-slate-900">14,99 zł</span>
-              </div>
+            </div>
+
+            {/* PayPo & BLIK Badge */}
+            <div className="pt-2 border-t border-[#EAE4D9] flex items-center justify-between text-[10px] text-slate-500 font-semibold">
+              <span className="flex items-center gap-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Kup teraz, zapłać za 30 dni z <strong>PayPo</strong></span>
+              </span>
+              <span className="px-2 py-0.5 rounded-md bg-white border border-[#DDD8CD] font-black text-purple-700">
+                BLIK
+              </span>
             </div>
           </div>
         </div>
@@ -524,6 +548,26 @@ export const ProductDetailPage: React.FC = () => {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Sticky Mobile Add To Cart Bar (Reserved / Zara / Zalando mobile standard) */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#FAF8F5]/95 backdrop-blur-md border-t border-[#E3DDD2] p-3 z-40 flex items-center justify-between shadow-2xl">
+        <div>
+          <div className="text-[10px] text-slate-500 font-bold">Cena całkowita:</div>
+          <div className="text-base font-black text-slate-900 leading-none">
+            {(product.price * quantity).toFixed(2)} zł
+          </div>
+          <div className="text-[10px] text-purple-700 font-bold mt-0.5">
+            {selectedColor} &bull; {selectedSize}
+          </div>
+        </div>
+        <button
+          onClick={handleAdd}
+          className="py-2.5 px-5 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-black text-xs rounded-xl shadow-xs flex items-center gap-1.5 cursor-pointer"
+        >
+          <ShoppingBag className="w-4 h-4" />
+          <span>DODAJ DO KOSZYKA</span>
+        </button>
       </div>
     </div>
   );

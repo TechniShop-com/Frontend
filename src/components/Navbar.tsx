@@ -2,7 +2,20 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { ShoppingBag, Search, ChevronDown, Check, User, LogOut } from 'lucide-react';
+import {
+  ShoppingBag,
+  Search,
+  ChevronDown,
+  Check,
+  User,
+  LogOut,
+  Sparkles,
+  Heart,
+  Zap,
+  ArrowRight,
+  Flame,
+  Package,
+} from 'lucide-react';
 import { Logo } from './Logo';
 
 interface NavbarProps {
@@ -11,7 +24,7 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = () => {
-  const { cart } = useCart();
+  const { cart, openCartDrawer } = useCart();
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -21,10 +34,36 @@ export const Navbar: React.FC<NavbarProps> = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const dropdownTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   const activeCategory = searchParams.get('category') || 'all';
   const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  const handleDropdownOpen = () => {
+    if (dropdownTimeoutRef.current) {
+      clearTimeout(dropdownTimeoutRef.current);
+      dropdownTimeoutRef.current = null;
+    }
+    setIsDropdownOpen(true);
+  };
+
+  const handleDropdownClose = () => {
+    if (dropdownTimeoutRef.current) {
+      clearTimeout(dropdownTimeoutRef.current);
+    }
+    dropdownTimeoutRef.current = setTimeout(() => {
+      setIsDropdownOpen(false);
+    }, 250);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (dropdownTimeoutRef.current) {
+        clearTimeout(dropdownTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Scroll detection: become 75% translucent on scroll
   useEffect(() => {
@@ -41,6 +80,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        if (dropdownTimeoutRef.current) clearTimeout(dropdownTimeoutRef.current);
         setIsDropdownOpen(false);
       }
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
@@ -59,6 +99,9 @@ export const Navbar: React.FC<NavbarProps> = () => {
   };
 
   const handleCategorySelect = (category: string) => {
+    if (dropdownTimeoutRef.current) {
+      clearTimeout(dropdownTimeoutRef.current);
+    }
     setIsDropdownOpen(false);
     if (category === 'all') {
       navigate('/products');
@@ -94,19 +137,25 @@ export const Navbar: React.FC<NavbarProps> = () => {
             Strona Główna
           </Link>
 
-          {/* PRODUKTY DROPDOWN (Kobiety / Mężczyźni) */}
+          {/* PRODUKTY DROPDOWN (Nowy, luksusowy Mega-Dropdown) */}
           <div
             className="relative"
             ref={dropdownRef}
-            onMouseEnter={() => setIsDropdownOpen(true)}
-            onMouseLeave={() => setIsDropdownOpen(false)}
+            onMouseEnter={handleDropdownOpen}
+            onMouseLeave={handleDropdownClose}
           >
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className={`flex items-center space-x-1.5 py-1.5 px-3 rounded-xl text-sm font-extrabold transition-all duration-200 hover:scale-105 cursor-pointer ${
-                location.pathname.startsWith('/product') || activeCategory === 'kobiety' || activeCategory === 'mezczyzni'
+              onMouseEnter={handleDropdownOpen}
+              className={`flex items-center space-x-1.5 py-1.5 px-3 rounded-xl text-sm font-extrabold transition-all duration-200 cursor-pointer ${
+                isDropdownOpen
+                  ? 'bg-[#E4DFD5] text-purple-700 shadow-xs'
+                  : location.pathname.startsWith('/product') ||
+                    activeCategory === 'kobiety' ||
+                    activeCategory === 'mezczyzni' ||
+                    activeCategory === 'akcesoria'
                   ? 'text-purple-700 font-black'
-                  : 'text-slate-700 hover:text-purple-600'
+                  : 'text-slate-700 hover:text-purple-600 hover:bg-[#E4DFD5]/50'
               }`}
             >
               <span>Produkty</span>
@@ -117,47 +166,185 @@ export const Navbar: React.FC<NavbarProps> = () => {
               />
             </button>
 
-            {/* Dropdown Menu Popup */}
+            {/* Rich Mega-Dropdown Menu Popup with Safe Invisible Padding Bridge */}
             {isDropdownOpen && (
-              <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-[#E2DDD3] rounded-2xl shadow-xl shadow-slate-900/10 p-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
-                <button
-                  onClick={() => handleCategorySelect('all')}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-colors cursor-pointer ${
-                    activeCategory === 'all'
-                      ? 'text-purple-600 font-bold bg-purple-50'
-                      : 'text-slate-700 hover:text-slate-900 hover:bg-slate-50 font-medium'
-                  }`}
-                >
-                  <span>Wszystkie produkty</span>
-                  {activeCategory === 'all' && <Check className="w-3.5 h-3.5 text-purple-600 shrink-0" />}
-                </button>
+              <div
+                className="absolute top-full -left-10 lg:-left-20 pt-2 w-[540px] sm:w-[590px] z-50 animate-in fade-in-0 zoom-in-95 duration-200"
+                onMouseEnter={handleDropdownOpen}
+                onMouseLeave={handleDropdownClose}
+              >
+                <div className="bg-[#FAF8F5] border border-[#E3DDD2] rounded-3xl shadow-2xl shadow-purple-950/15 overflow-hidden">
+                  <div className="grid grid-cols-12 divide-x divide-[#EAE4D9]">
+                  {/* Left Column: Categories List */}
+                  <div className="col-span-7 p-4 space-y-1.5">
+                    <div className="flex items-center justify-between px-2 pb-2 mb-1 border-b border-[#EAE4D9]">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-purple-700">Kolekcje & Asortyment</span>
+                      <span className="text-[10px] font-bold text-slate-500 bg-[#EFECE4] px-2 py-0.5 rounded-full">Techni 2026</span>
+                    </div>
 
-                <div className="my-1 border-t border-slate-100" />
+                    {/* Wszystkie produkty */}
+                    <button
+                      onClick={() => handleCategorySelect('all')}
+                      className={`w-full flex items-center justify-between p-2.5 rounded-2xl transition-all duration-200 text-left group cursor-pointer ${
+                        activeCategory === 'all' && location.pathname === '/products'
+                          ? 'bg-white shadow-xs ring-1 ring-purple-500/20'
+                          : 'hover:bg-white hover:shadow-xs'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 group-hover:bg-purple-600 group-hover:text-white transition-all duration-200">
+                          <Sparkles className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="font-extrabold text-xs text-slate-800 group-hover:text-purple-700 transition-colors">
+                            Wszystkie Produkty
+                          </div>
+                          <div className="text-[11px] text-slate-500 font-medium">Pełny katalog i nowości</div>
+                        </div>
+                      </div>
+                      {activeCategory === 'all' && location.pathname === '/products' ? (
+                        <Check className="w-4 h-4 text-purple-600 shrink-0" />
+                      ) : (
+                        <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-purple-600 group-hover:translate-x-0.5 transition-all shrink-0 opacity-0 group-hover:opacity-100" />
+                      )}
+                    </button>
 
-                <button
-                  onClick={() => handleCategorySelect('kobiety')}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-colors cursor-pointer ${
-                    activeCategory === 'kobiety'
-                      ? 'text-purple-600 font-bold bg-purple-50'
-                      : 'text-slate-700 hover:text-slate-900 hover:bg-slate-50 font-medium'
-                  }`}
-                >
-                  <span>Kobiety</span>
-                  {activeCategory === 'kobiety' && <Check className="w-3.5 h-3.5 text-purple-600 shrink-0" />}
-                </button>
+                    {/* Dla Kobiet */}
+                    <button
+                      onClick={() => handleCategorySelect('kobiety')}
+                      className={`w-full flex items-center justify-between p-2.5 rounded-2xl transition-all duration-200 text-left group cursor-pointer ${
+                        activeCategory === 'kobiety'
+                          ? 'bg-white shadow-xs ring-1 ring-purple-500/20'
+                          : 'hover:bg-white hover:shadow-xs'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-9 h-9 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 group-hover:bg-rose-500 group-hover:text-white transition-all duration-200">
+                          <Heart className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="font-extrabold text-xs text-slate-800 group-hover:text-purple-700 transition-colors">
+                            Dla Kobiet
+                          </div>
+                          <div className="text-[11px] text-slate-500 font-medium">Dopasowane polo, t-shirty</div>
+                        </div>
+                      </div>
+                      {activeCategory === 'kobiety' ? (
+                        <Check className="w-4 h-4 text-purple-600 shrink-0" />
+                      ) : (
+                        <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-purple-600 group-hover:translate-x-0.5 transition-all shrink-0 opacity-0 group-hover:opacity-100" />
+                      )}
+                    </button>
 
-                <button
-                  onClick={() => handleCategorySelect('mezczyzni')}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-colors cursor-pointer ${
-                    activeCategory === 'mezczyzni'
-                      ? 'text-purple-600 font-bold bg-purple-50'
-                      : 'text-slate-700 hover:text-slate-900 hover:bg-slate-50 font-medium'
-                  }`}
-                >
-                  <span>Mężczyźni</span>
-                  {activeCategory === 'mezczyzni' && <Check className="w-3.5 h-3.5 text-purple-600 shrink-0" />}
-                </button>
+                    {/* Dla Mężczyzn */}
+                    <button
+                      onClick={() => handleCategorySelect('mezczyzni')}
+                      className={`w-full flex items-center justify-between p-2.5 rounded-2xl transition-all duration-200 text-left group cursor-pointer ${
+                        activeCategory === 'mezczyzni'
+                          ? 'bg-white shadow-xs ring-1 ring-purple-500/20'
+                          : 'hover:bg-white hover:shadow-xs'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-200">
+                          <Zap className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="font-extrabold text-xs text-slate-800 group-hover:text-purple-700 transition-colors">
+                            Dla Mężczyzn
+                          </div>
+                          <div className="text-[11px] text-slate-500 font-medium">Klasyczne bluzy, t-shirty dev</div>
+                        </div>
+                      </div>
+                      {activeCategory === 'mezczyzni' ? (
+                        <Check className="w-4 h-4 text-purple-600 shrink-0" />
+                      ) : (
+                        <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-purple-600 group-hover:translate-x-0.5 transition-all shrink-0 opacity-0 group-hover:opacity-100" />
+                      )}
+                    </button>
+
+                    {/* Akcesoria & Gadżety */}
+                    <button
+                      onClick={() => handleCategorySelect('akcesoria')}
+                      className={`w-full flex items-center justify-between p-2.5 rounded-2xl transition-all duration-200 text-left group cursor-pointer ${
+                        activeCategory === 'akcesoria'
+                          ? 'bg-white shadow-xs ring-1 ring-purple-500/20'
+                          : 'hover:bg-white hover:shadow-xs'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 group-hover:bg-amber-600 group-hover:text-white transition-all duration-200">
+                          <Package className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="font-extrabold text-xs text-slate-800 group-hover:text-purple-700 transition-colors">
+                            Akcesoria & Tech
+                          </div>
+                          <div className="text-[11px] text-slate-500 font-medium">Plecaki 24L, butelki, czapki</div>
+                        </div>
+                      </div>
+                      {activeCategory === 'akcesoria' ? (
+                        <Check className="w-4 h-4 text-purple-600 shrink-0" />
+                      ) : (
+                        <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-purple-600 group-hover:translate-x-0.5 transition-all shrink-0 opacity-0 group-hover:opacity-100" />
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Right Column: Featured Spotlight Card */}
+                  <div className="col-span-5 p-4 flex flex-col justify-between bg-gradient-to-b from-[#F3EFE7] to-[#EAE4D9]/50">
+                    <div
+                      onClick={() => {
+                        setIsDropdownOpen(false);
+                        navigate('/product/hoodie-1');
+                      }}
+                      className="relative h-full w-full rounded-2xl overflow-hidden cursor-pointer group/card flex flex-col justify-between p-3.5 bg-slate-900 border border-purple-500/20 shadow-md min-h-[220px]"
+                    >
+                      <img
+                        src="https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=600&q=80"
+                        alt="Bluza Hoodie Techni Signature"
+                        className="absolute inset-0 w-full h-full object-cover opacity-45 group-hover/card:scale-105 group-hover/card:opacity-55 transition-all duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
+
+                      <div className="relative z-10 flex items-center justify-between">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-600 text-white shadow-sm flex items-center gap-1">
+                          <Flame className="w-3 h-3 text-yellow-300" /> Bestseller
+                        </span>
+                      </div>
+
+                      <div className="relative z-10 space-y-1">
+                        <span className="text-[10px] font-bold text-purple-300 uppercase tracking-wider block">Wybór Sezonu</span>
+                        <h4 className="text-xs font-black text-white group-hover/card:text-purple-200 transition-colors leading-snug">
+                          Bluza Hoodie Signature
+                        </h4>
+                        <div className="flex items-center justify-between pt-1">
+                          <span className="text-xs font-extrabold text-white">159.99 zł</span>
+                          <span className="inline-flex items-center text-[10px] font-black text-purple-300 group-hover/card:text-white transition-colors">
+                            Sprawdź <ArrowRight className="w-3 h-3 ml-1 group-hover/card:translate-x-0.5 transition-transform" />
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom Trust Banner */}
+                <div className="bg-[#F1ECE1] border-t border-[#E3DDD2] px-5 py-2.5 flex items-center justify-between">
+                  <div className="flex items-center space-x-2 text-[11px] font-bold text-slate-600">
+                    <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                    <span>Darmowa dostawa od 200 zł &bull; 14 dni na zwrot</span>
+                  </div>
+                  <button
+                    onClick={() => handleCategorySelect('all')}
+                    className="text-[11px] font-black text-purple-700 hover:text-purple-900 inline-flex items-center space-x-1 hover:underline cursor-pointer"
+                  >
+                    <span>Zobacz wszystko</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </button>
+                </div>
               </div>
+            </div>
             )}
           </div>
         </div>
@@ -179,10 +366,10 @@ export const Navbar: React.FC<NavbarProps> = () => {
           </div>
 
           {/* Cart Button */}
-          <Link
-            to="/cart"
+          <button
+            onClick={openCartDrawer}
             className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#E4DFD5] hover:bg-[#DDD8CD] text-slate-700 hover:text-purple-600 border border-[#DDD8CD] hover:border-purple-300 shadow-xs hover:shadow transition-all duration-200 group active:scale-95 cursor-pointer"
-            title="Koszyk"
+            title="Otwórz koszyk"
           >
             <ShoppingBag className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-slate-700 group-hover:text-purple-600 group-hover:scale-105 transition-all" />
             {totalCount > 0 && (
@@ -190,7 +377,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
                 {totalCount}
               </span>
             )}
-          </Link>
+          </button>
 
           {/* User Auth: Avatar if logged in, "Zaloguj się" if not logged in */}
           {!user ? (
