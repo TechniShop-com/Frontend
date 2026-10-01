@@ -330,20 +330,6 @@ export const Navbar: React.FC<NavbarProps> = () => {
                   </div>
                 </div>
 
-                {/* Bottom Trust Banner */}
-                <div className="bg-[#F1ECE1] border-t border-[#E3DDD2] px-5 py-2.5 flex items-center justify-between">
-                  <div className="flex items-center space-x-2 text-[11px] font-bold text-slate-600">
-                    <Sparkles className="w-3.5 h-3.5 text-purple-600" />
-                    <span>Darmowa dostawa od 200 zł &bull; 14 dni na zwrot</span>
-                  </div>
-                  <button
-                    onClick={() => handleCategorySelect('all')}
-                    className="text-[11px] font-black text-purple-700 hover:text-purple-900 inline-flex items-center space-x-1 hover:underline cursor-pointer"
-                  >
-                    <span>Zobacz wszystko</span>
-                    <ArrowRight className="w-3 h-3" />
-                  </button>
-                </div>
               </div>
             </div>
             )}

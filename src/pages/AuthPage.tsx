@@ -193,8 +193,8 @@ export const AuthPage: React.FC = () => {
         {/* Subtle decorative purple glow in top right */}
         <div className="absolute top-0 right-0 w-80 h-80 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="w-full max-w-[430px] bg-white px-6 py-5 sm:px-8 sm:py-6 rounded-3xl border border-[#EBE6DD] shadow-xl shadow-purple-950/5 min-h-[580px] sm:h-[590px] flex flex-col justify-between relative z-10">
-          <div className="space-y-3.5 sm:space-y-4">
+        <div className="w-full max-w-[450px] bg-white px-6 py-5 sm:px-8 sm:py-6 rounded-3xl border border-[#EBE6DD] shadow-xl shadow-purple-950/5 min-h-[640px] flex flex-col justify-between relative z-10">
+          <div className="space-y-3 sm:space-y-3.5">
             {/* Logo Brand Header */}
             <div className="flex items-center justify-center">
               <Link to="/" className="inline-block transition-transform hover:scale-105">
@@ -209,7 +209,7 @@ export const AuthPage: React.FC = () => {
               </h1>
               <p className="text-xs sm:text-sm text-slate-500 font-medium">
                 {!isRegister
-                  ? 'Wprowadź dane logowania, aby przejść do swojego konta.'
+                  ? 'Wprowadź dane, aby przejść do konta.'
                   : 'Dołącz do TechniShop i zamawiaj oficjalny merch.'}
               </p>
             </div>
@@ -249,13 +249,13 @@ export const AuthPage: React.FC = () => {
 
           {/* Error Message */}
           {errorMessage && (
-            <div className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-bold text-center animate-shake">
+            <div className="p-2.5 my-1 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-bold text-center animate-shake">
               {errorMessage}
             </div>
           )}
 
           {/* Auth Form */}
-          <form onSubmit={handleSubmit} className="flex-1 flex flex-col justify-between py-1">
+          <form onSubmit={handleSubmit} className="flex-1 flex flex-col justify-between py-2">
             {isRegister ? (
               <div className="space-y-2.5 sm:space-y-3 pt-1">
                 <div>
@@ -331,9 +331,9 @@ export const AuthPage: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <div className="space-y-4 pt-1">
+              <div className="space-y-3 pt-1">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
                     Adres Email
                   </label>
                   <div className="relative group">
@@ -352,7 +352,7 @@ export const AuthPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
                     Hasło
                   </label>
                   <div className="relative group">
@@ -378,7 +378,7 @@ export const AuthPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between text-xs pt-1">
+                <div className="flex items-center justify-between text-xs pt-0.5">
                   <label className="flex items-center space-x-2 cursor-pointer select-none text-slate-600 hover:text-slate-900">
                     <input
                       type="checkbox"
@@ -401,8 +401,8 @@ export const AuthPage: React.FC = () => {
                 </div>
 
                 {/* DOKŁADNIE W MIEJSCU ZAZNACZONYM NA ZDJĘCIU: "lub zaloguj przez" i niżej ikonka Google */}
-                <div className="pt-1">
-                  <div className="relative flex items-center justify-center my-2.5">
+                <div>
+                  <div className="relative flex items-center justify-center my-2">
                     <div className="border-t border-[#E5E0D8] w-full" />
                     <span className="bg-white px-2.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0">
                       lub zaloguj przez
@@ -444,7 +444,7 @@ export const AuthPage: React.FC = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full mt-3 py-3.5 px-6 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-bold text-sm rounded-xl shadow-xs flex items-center justify-center space-x-2 transition-colors disabled:opacity-70 cursor-pointer"
+              className="w-full mt-3 py-3 px-6 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-bold text-sm rounded-xl shadow-xs flex items-center justify-center space-x-2 transition-colors disabled:opacity-70 cursor-pointer"
             >
               <span>{!isRegister ? 'Zaloguj się do sklepu' : 'Zarejestruj nowe konto'}</span>
               <ArrowRight className="w-4 h-4" />
@@ -452,7 +452,7 @@ export const AuthPage: React.FC = () => {
           </form>
 
           {/* Footer Navigation Switcher */}
-          <div className="text-center text-xs text-slate-600 font-medium pt-2.5 border-t border-[#EBE6DD]">
+          <div className="text-center text-xs text-slate-600 font-medium pt-3 pb-1 border-t border-[#EBE6DD]">
             {!isRegister ? (
               <p>
                 Nie masz jeszcze konta?{' '}
