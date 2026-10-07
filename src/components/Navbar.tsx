@@ -66,10 +66,10 @@ export const Navbar: React.FC<NavbarProps> = () => {
     };
   }, []);
 
-  // Scroll detection: become 75% translucent on scroll
+  // Scroll detection: become 50% translucent when leaving starting position
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      setIsScrolled(window.scrollY > 0);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -113,9 +113,9 @@ export const Navbar: React.FC<NavbarProps> = () => {
 
   return (
     <header
-      className={`sticky top-0 z-50 border-b transition-colors duration-300 ${
+      className={`sticky top-0 z-50 border-b transition-all duration-300 ${
         isScrolled
-          ? 'bg-[#EFECE4]/75 backdrop-blur-md border-[#E2DDD3]/80 shadow-xs'
+          ? 'bg-[#EFECE4]/50 backdrop-blur-md border-[#E2DDD3]/60 shadow-xs'
           : 'bg-[#EFECE4] border-[#E2DDD3]'
       }`}
     >

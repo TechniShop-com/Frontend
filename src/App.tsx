@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
@@ -12,7 +12,17 @@ import { CartPage } from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { AuthPage } from './pages/AuthPage';
 import { SettingsPage } from './pages/SettingsPage';
-import { useLocation } from 'react-router-dom';
+
+// Automatyczne przewijanie na samą górę przy każdej zmianie podstrony
+const ScrollToTop: React.FC = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [pathname]);
+
+  return null;
+};
 
 const AppLayout: React.FC = () => {
   const location = useLocation();
@@ -22,10 +32,11 @@ const AppLayout: React.FC = () => {
 
   return (
     <div className={`min-h-screen bg-[#FAF7F2] text-slate-900 font-sans flex flex-col ${isFullscreen ? 'h-screen overflow-hidden' : 'justify-between'} selection:bg-purple-600 selection:text-white`}>
+      <ScrollToTop />
       <CartDrawer />
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
+      <div className={`flex-1 flex flex-col ${isFullscreen ? 'h-full overflow-hidden' : 'w-full'}`}>
         {!isSettingsPage && <Navbar />}
-        <main className={`flex-1 flex flex-col h-full ${isSettingsPage ? 'overflow-hidden' : ''}`}>
+        <main className={`flex-1 flex flex-col ${isSettingsPage ? 'h-full overflow-hidden' : ''}`}>
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/products" element={<ProductsPage />} />
