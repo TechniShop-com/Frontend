@@ -114,3 +114,123 @@ export const googleAuthApi = async (data: {
   const response = await api.post<{ message: string; user: any }>('/auth/google', data);
   return response.data;
 };
+
+// ==========================================
+// SYSTEM KODÓW RABATOWYCH (PROMO CODES)
+// ==========================================
+
+import { DiscountCoupon } from '../types';
+
+export const FALLBACK_COUPONS: DiscountCoupon[] = [
+  {
+    code: 'TECHNI20',
+    type: 'PERCENTAGE',
+    value: 20,
+    description: '20% zniżki dla społeczności Techni Schools & Zdalni',
+  },
+  {
+    code: 'START30',
+    type: 'FIXED',
+    value: 30,
+    description: '30 zł rabatu na zakupy od 120 zł',
+    minOrderValue: 120,
+  },
+  {
+    code: 'ZDALNI15',
+    type: 'PERCENTAGE',
+    value: 15,
+    description: '15% rabatu na cały asortyment',
+  },
+  {
+    code: 'FREESHIP',
+    type: 'FREE_SHIPPING',
+    value: 0,
+    description: 'Darmowa dostawa do Paczkomatu i Kuriera',
+  },
+];
+
+export interface ValidateCouponResult {
+  valid: boolean;
+  message: string;
+  coupon?: DiscountCoupon;
+  discountAmount?: number;
+  finalTotal?: number;
+  isFreeShipping?: boolean;
+}
+
+// Pobieranie aktywnych kodów rabatowych
+export const getCouponsApi = async (): Promise<DiscountCoupon[]> => {
+  try {
+    const res = await api.get<{ coupons: DiscountCoupon[] }>('/coupons');
+    if (res.data?.coupons && Array.isArray(res.data.coupons)) {
+      return res.data.coupons;
+    }
+  } catch {
+    // Używamy fallbacku jeśli backend jest offline
+  }
+  return FALLBACK_COUPONS;
+};
+
+// Walidacja kodu rabatowego z automatycznym fallbackiem
+export const validateCouponApi = async (
+  code: string,
+  cartTotal: number
+): Promise<ValidateCouponResult> => {
+  const trimmed = (code || '').trim().toUpperCase();
+  if (!trimmed) {
+    return { valid: false, message: 'Wpisz kod rabatowy przed zatwierdzeniem.' };
+  }
+
+  try {
+    const res = await api.post<ValidateCouponResult>('/coupons/validate', {
+      code: trimmed,
+      cartTotal,
+    });
+    return res.data;
+  } catch (err: any) {
+    // Jeżeli backend zgłosił błąd biznesowy z odpowiedzią z serwera
+    if (err.response?.data?.message) {
+      return {
+        valid: false,
+        message: err.response.data.message,
+      };
+    }
+
+    // Niezawodny fallback lokalny, gdy serwer API jest wyłączony
+    const coupon = FALLBACK_COUPONS.find((c) => c.code.toUpperCase() === trimmed);
+    if (!coupon) {
+      return {
+        valid: false,
+        message: `Kod rabatowy "${trimmed}" nie istnieje lub wygasł.`,
+      };
+    }
+
+    if (coupon.minOrderValue && cartTotal < coupon.minOrderValue) {
+      return {
+        valid: false,
+        message: `Kod "${coupon.code}" wymaga minimalnej kwoty zamówienia ${coupon.minOrderValue.toFixed(2)} zł (brakuje Ci ${(coupon.minOrderValue - cartTotal).toFixed(2)} zł).`,
+      };
+    }
+
+    let discountAmount = 0;
+    if (coupon.type === 'PERCENTAGE') {
+      discountAmount = Math.round(cartTotal * (coupon.value / 100) * 100) / 100;
+    } else if (coupon.type === 'FIXED') {
+      discountAmount = Math.min(coupon.value, cartTotal);
+    } else if (coupon.type === 'FREE_SHIPPING') {
+      discountAmount = 0;
+    }
+
+    const finalTotal = Math.max(0, cartTotal - discountAmount);
+
+    return {
+      valid: true,
+      message: `Kod "${coupon.code}" został naliczony pomyślnie!`,
+      coupon,
+      discountAmount,
+      finalTotal,
+      isFreeShipping: coupon.type === 'FREE_SHIPPING' || cartTotal >= 200,
+    };
+  }
+};
+

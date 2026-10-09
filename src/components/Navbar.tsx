@@ -34,9 +34,17 @@ export const Navbar: React.FC<NavbarProps> = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const dropdownTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
+
+  const handleCopyPromo = (code: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedCode(true);
+    setTimeout(() => setCopiedCode(false), 2200);
+  };
+
 
   const activeCategory = searchParams.get('category') || 'all';
   const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -115,15 +123,38 @@ export const Navbar: React.FC<NavbarProps> = () => {
     <header
       className={`sticky top-0 z-50 border-b transition-all duration-300 ${
         isScrolled
-          ? 'bg-[#EFECE4]/50 backdrop-blur-md border-[#E2DDD3]/60 shadow-xs'
+          ? 'bg-[#EFECE4]/85 backdrop-blur-md border-[#E2DDD3]/60 shadow-xs'
           : 'bg-[#EFECE4] border-[#E2DDD3]'
       }`}
     >
-      <div className="w-full px-4 sm:px-8 lg:px-12 py-3.5 flex items-center justify-between gap-4">
+      {/* Promo Announcement Banner */}
+      <div className="bg-gradient-to-r from-purple-700 via-indigo-700 to-purple-800 text-white text-[11px] py-1.5 px-4 text-center font-bold tracking-wide flex items-center justify-center gap-2 border-b border-purple-800/40 shadow-xs">
+        <span className="flex items-center gap-1.5 flex-wrap justify-center">
+          <Sparkles className="w-3.5 h-3.5 text-yellow-300 animate-pulse shrink-0" />
+          <span>
+            Promocja dla uczniów: Wpisz kod{' '}
+            <span className="font-mono bg-white/20 px-1.5 py-0.5 rounded text-yellow-300 font-extrabold tracking-wider border border-white/20">
+              TECHNI20
+            </span>{' '}
+            w koszyku i odbierz <strong className="text-yellow-200">-20% rabatu</strong>!
+          </span>
+        </span>
+        <button
+          type="button"
+          onClick={() => handleCopyPromo('TECHNI20')}
+          className="ml-1 sm:ml-2 px-2 py-0.5 bg-white/15 hover:bg-white/25 active:scale-95 rounded text-[10px] uppercase font-black tracking-wider transition-all cursor-pointer border border-white/20 shrink-0"
+          title="Kopiuj kod rabatowy"
+        >
+          {copiedCode ? '✓ Skopiowano!' : 'Kopiuj'}
+        </button>
+      </div>
+
+      <div className="w-full px-4 sm:px-8 lg:px-12 py-3 flex items-center justify-between gap-4">
         {/* Brand Logo */}
         <Link to="/" className="shrink-0">
           <Logo size="md" />
         </Link>
+
 
         {/* Center Navigation Links & Produkty Dropdown */}
         <div className="hidden md:flex items-center space-x-6 text-sm font-extrabold">

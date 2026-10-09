@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { PromoCodeBox } from '../components/PromoCodeBox';
 import {
   Trash2,
   ShoppingBag,
@@ -11,18 +12,31 @@ import {
   Check,
   ShieldCheck,
   Clock,
+  Sparkles,
 } from 'lucide-react';
 
 export const CartPage: React.FC = () => {
-  const { cart, removeFromCart, updateQuantity, totalPrice } = useCart();
+  const {
+    cart,
+    removeFromCart,
+    updateQuantity,
+    subtotalPrice,
+    discountAmount,
+    totalPrice,
+    coupon,
+    isFreeShippingPromo,
+  } = useCart();
   const navigate = useNavigate();
 
   const freeShippingThreshold = 200;
-  const isFreeShipping = totalPrice >= freeShippingThreshold;
-  const remainingForFreeShipping = Math.max(0, freeShippingThreshold - totalPrice);
-  const progressPercent = Math.min(100, Math.round((totalPrice / freeShippingThreshold) * 100));
-  const deliveryCost = isFreeShipping || totalPrice === 0 ? 0 : 14.99;
+  const isFreeShipping = subtotalPrice >= freeShippingThreshold || isFreeShippingPromo;
+  const remainingForFreeShipping = Math.max(0, freeShippingThreshold - subtotalPrice);
+  const progressPercent = isFreeShippingPromo
+    ? 100
+    : Math.min(100, Math.round((subtotalPrice / freeShippingThreshold) * 100));
+  const deliveryCost = isFreeShipping || subtotalPrice === 0 ? 0 : 14.99;
   const totalWithShipping = totalPrice + deliveryCost;
+  const originalTotalWithShipping = subtotalPrice + (subtotalPrice >= freeShippingThreshold ? 0 : 14.99);
 
   return (
     <div className="max-w-5xl mx-auto p-4 sm:p-6 space-y-6 pt-8">
@@ -69,7 +83,10 @@ export const CartPage: React.FC = () => {
                   <Truck className="w-4 h-4 text-purple-600" />
                   {isFreeShipping ? (
                     <span className="text-emerald-700 font-black flex items-center gap-1">
-                      <Check className="w-4 h-4 text-emerald-600" /> Kwalifikujesz się do DARMOWEJ DOSTAWY do Paczkomatu!
+                      <Check className="w-4 h-4 text-emerald-600" />{' '}
+                      {isFreeShippingPromo
+                        ? 'Aktywny kupon na DARMOWĄ DOSTAWĘ do Paczkomatu!'
+                        : 'Kwalifikujesz się do DARMOWEJ DOSTAWY do Paczkomatu!'}
                     </span>
                   ) : (
                     <span>
@@ -118,35 +135,37 @@ export const CartPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Quantity & Delete Controls */}
-                  <div className="flex items-center space-x-6 w-full sm:w-auto justify-between sm:justify-end">
-                    <div className="flex items-center border border-[#DDD8CD] rounded-xl bg-[#FAF8F5] p-1">
+                  <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto space-x-6">
+                    <div className="hidden sm:block text-right">
+                      <div className="font-black text-sm text-slate-900">
+                        {(item.product.price * item.quantity).toFixed(2)} zł
+                      </div>
+                      <div className="text-[11px] text-slate-400 font-medium">
+                        {item.product.price.toFixed(2)} zł / szt.
+                      </div>
+                    </div>
+
+                    <div className="flex items-center border border-[#DDD8CD] rounded-xl bg-[#FAF8F5] p-0.5">
                       <button
                         onClick={() => updateQuantity(index, -1)}
-                        className="w-7 h-7 rounded-lg bg-white border border-[#DDD8CD] text-slate-700 font-bold flex items-center justify-center hover:bg-purple-50 hover:text-purple-700 transition-colors"
-                        title="Zmniejsz ilość"
+                        className="w-7 h-7 rounded-lg bg-white border border-[#DDD8CD] text-purple-700 font-bold flex items-center justify-center hover:bg-purple-50 transition-colors"
                       >
                         <Minus className="w-3 h-3" />
                       </button>
-                      <span className="w-9 text-center font-bold text-xs text-slate-900">
+                      <span className="w-8 text-center font-bold text-xs text-slate-900">
                         {item.quantity}
                       </span>
                       <button
                         onClick={() => updateQuantity(index, 1)}
-                        className="w-7 h-7 rounded-lg bg-white border border-[#DDD8CD] text-slate-700 font-bold flex items-center justify-center hover:bg-purple-50 hover:text-purple-700 transition-colors"
-                        title="Zwiększ ilość"
+                        className="w-7 h-7 rounded-lg bg-white border border-[#DDD8CD] text-purple-700 font-bold flex items-center justify-center hover:bg-purple-50 transition-colors"
                       >
                         <Plus className="w-3 h-3" />
                       </button>
                     </div>
 
-                    <span className="hidden sm:block font-black text-base text-purple-700 min-w-20 text-right">
-                      {(item.product.price * item.quantity).toFixed(2)} zł
-                    </span>
-
                     <button
                       onClick={() => removeFromCart(index)}
-                      className="text-slate-400 hover:text-rose-500 p-2 transition-colors hover:scale-110 cursor-pointer"
+                      className="text-slate-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition-colors"
                       title="Usuń pozycję z koszyka"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -159,6 +178,9 @@ export const CartPage: React.FC = () => {
 
           {/* Sidebar Summary (4 cols) */}
           <div className="lg:col-span-4 sticky top-24 space-y-4">
+            {/* Promo Code Box */}
+            <PromoCodeBox />
+
             <div className="bg-white border border-[#E7E2D8] rounded-3xl p-6 space-y-4 shadow-xs">
               <h3 className="font-black text-sm text-slate-900 pb-2 border-b border-[#EAE4D9]">
                 Podsumowanie Płatności
@@ -167,8 +189,19 @@ export const CartPage: React.FC = () => {
               <div className="space-y-2 text-xs font-medium text-slate-600">
                 <div className="flex justify-between">
                   <span>Wartość koszyka:</span>
-                  <span className="font-bold text-slate-900">{totalPrice.toFixed(2)} zł</span>
+                  <span className="font-bold text-slate-900">{subtotalPrice.toFixed(2)} zł</span>
                 </div>
+
+                {coupon && discountAmount > 0 && (
+                  <div className="flex justify-between items-center text-emerald-700 font-bold">
+                    <span className="flex items-center gap-1">
+                      <Sparkles className="w-3.5 h-3.5 text-yellow-500 fill-yellow-400" />
+                      <span>Rabat ({coupon.code}):</span>
+                    </span>
+                    <span className="font-mono">-{discountAmount.toFixed(2)} zł</span>
+                  </div>
+                )}
+
                 <div className="flex justify-between">
                   <span>Dostawa do Paczkomatu:</span>
                   <span className="font-bold">
@@ -182,9 +215,16 @@ export const CartPage: React.FC = () => {
 
                 <div className="border-t border-[#DDD8CD] pt-3 flex justify-between items-baseline text-sm">
                   <span className="font-black text-slate-900">Razem do zapłaty:</span>
-                  <span className="text-2xl font-black text-purple-700">
-                    {totalWithShipping.toFixed(2)} zł
-                  </span>
+                  <div className="text-right">
+                    {discountAmount > 0 && (
+                      <span className="line-through text-xs text-slate-400 font-semibold mr-2 font-mono">
+                        {originalTotalWithShipping.toFixed(2)} zł
+                      </span>
+                    )}
+                    <span className="text-2xl font-black text-purple-700 font-mono">
+                      {totalWithShipping.toFixed(2)} zł
+                    </span>
+                  </div>
                 </div>
               </div>
 

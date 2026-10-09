@@ -1,6 +1,18 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { CartItem, Product } from '../types';
-import { getCart, addToCartApi, removeCartItemApi, clearCartApi } from '../services/api';
+import { CartItem, Product, DiscountCoupon } from '../types';
+import {
+  getCart,
+  addToCartApi,
+  removeCartItemApi,
+  clearCartApi,
+  validateCouponApi,
+} from '../services/api';
+
+interface ApplyCouponResponse {
+  success: boolean;
+  message: string;
+  discount?: number;
+}
 
 interface CartContextType {
   cart: CartItem[];
@@ -8,7 +20,13 @@ interface CartContextType {
   removeFromCart: (indexOrId: number) => Promise<void>;
   updateQuantity: (indexOrId: number, newQty: number) => Promise<void>;
   clearCart: () => Promise<void>;
+  subtotalPrice: number;
+  discountAmount: number;
   totalPrice: number;
+  coupon: DiscountCoupon | null;
+  applyCoupon: (code: string) => Promise<ApplyCouponResponse>;
+  removeCoupon: () => void;
+  isFreeShippingPromo: boolean;
   isLoading: boolean;
   isCartDrawerOpen: boolean;
   setIsCartDrawerOpen: (open: boolean) => void;
@@ -27,6 +45,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return [];
     }
   });
+
+  const [coupon, setCoupon] = useState<DiscountCoupon | null>(() => {
+    try {
+      const saved = localStorage.getItem('technishop_coupon');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
   const [isLoading, setIsLoading] = useState(false);
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
 
@@ -51,10 +79,19 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     syncCart();
   }, []);
 
-  // Zapis do localStorage przy każdej zmianie
+  // Zapis koszyka do localStorage przy każdej zmianie
   useEffect(() => {
     localStorage.setItem('technishop_cart', JSON.stringify(cart));
   }, [cart]);
+
+  // Zapis kuponu do localStorage
+  useEffect(() => {
+    if (coupon) {
+      localStorage.setItem('technishop_coupon', JSON.stringify(coupon));
+    } else {
+      localStorage.removeItem('technishop_coupon');
+    }
+  }, [coupon]);
 
   const addToCart = async (product: Product, color: string, size: string, quantity: number = 1) => {
     // Aktualizacja optymistyczna stanu lokalnego
@@ -118,7 +155,46 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const totalPrice = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  // Obliczenia finansowe i rabatowe
+  const subtotalPrice = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+
+  let discountAmount = 0;
+  if (coupon) {
+    const isMinMet = !coupon.minOrderValue || subtotalPrice >= coupon.minOrderValue;
+    if (isMinMet) {
+      if (coupon.type === 'PERCENTAGE') {
+        discountAmount = Math.round(subtotalPrice * (coupon.value / 100) * 100) / 100;
+      } else if (coupon.type === 'FIXED') {
+        discountAmount = Math.min(coupon.value, subtotalPrice);
+      } else if (coupon.type === 'FREE_SHIPPING') {
+        discountAmount = 0;
+      }
+    }
+  }
+
+  const totalPrice = Math.max(0, subtotalPrice - discountAmount);
+  const isFreeShippingPromo = coupon?.type === 'FREE_SHIPPING';
+
+  const applyCoupon = async (code: string): Promise<ApplyCouponResponse> => {
+    const result = await validateCouponApi(code, subtotalPrice);
+    if (result.valid && result.coupon) {
+      setCoupon(result.coupon);
+      return {
+        success: true,
+        message: result.message,
+        discount: result.discountAmount,
+      };
+    } else {
+      return {
+        success: false,
+        message: result.message,
+      };
+    }
+  };
+
+  const removeCoupon = () => {
+    setCoupon(null);
+  };
 
   return (
     <CartContext.Provider
@@ -128,7 +204,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         removeFromCart,
         updateQuantity,
         clearCart,
+        subtotalPrice,
+        discountAmount,
         totalPrice,
+        coupon,
+        applyCoupon,
+        removeCoupon,
+        isFreeShippingPromo,
         isLoading,
         isCartDrawerOpen,
         setIsCartDrawerOpen,
