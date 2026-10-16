@@ -4,7 +4,8 @@ import { MOCK_PRODUCTS } from '../mockData';
 import { Product } from '../types';
 import { getProducts } from '../services/api';
 import { useCart } from '../context/CartContext';
-import { ShoppingBag, Star, Zap, Check, Loader2, Heart, Sparkles } from 'lucide-react';
+import { ShoppingBag, Star, Zap, Check, Loader2, Heart, Sparkles, Box } from 'lucide-react';
+import { Model3DModal } from '../components/Model3DModal';
 
 const getColorHex = (colorName: string): string => {
   const c = colorName.toLowerCase();
@@ -29,6 +30,7 @@ export const ProductsPage: React.FC = () => {
 
   const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
   const [loading, setLoading] = useState(true);
+  const [modal3DProduct, setModal3DProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -167,6 +169,18 @@ export const ProductsPage: React.FC = () => {
                         ? 'Męskie'
                         : 'Unisex'}
                     </span>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setModal3DProduct(product);
+                      }}
+                      className="px-2.5 py-1 rounded-full text-[9px] font-black bg-slate-900/90 hover:bg-purple-900 text-yellow-300 shadow-sm border border-purple-400/40 flex items-center space-x-1 hover:scale-105 transition-all cursor-pointer"
+                      title="Otwórz interaktywny model 3D w 360°"
+                    >
+                      <Box className="w-3 h-3 text-yellow-300 animate-pulse" />
+                      <span>Podgląd 3D</span>
+                    </button>
                   </div>
 
                   {/* Wishlist Heart Button */}
@@ -264,6 +278,13 @@ export const ProductsPage: React.FC = () => {
           })}
         </div>
       )}
+
+      {/* 3D PREVIEW MODAL */}
+      <Model3DModal
+        product={modal3DProduct}
+        isOpen={!!modal3DProduct}
+        onClose={() => setModal3DProduct(null)}
+      />
     </div>
   );
 };

@@ -4,6 +4,7 @@ import { MOCK_PRODUCTS } from '../mockData';
 import { Product } from '../types';
 import { getProductById } from '../services/api';
 import { useCart } from '../context/CartContext';
+import { Product3DViewer } from '../components/Product3DViewer';
 import {
   Check,
   ShoppingBag,
@@ -13,7 +14,10 @@ import {
   Star,
   ChevronRight,
   Ruler,
-  Clock
+  Clock,
+  Box,
+  Sparkles,
+  Image as ImageIcon
 } from 'lucide-react';
 
 export const ProductDetailPage: React.FC = () => {
@@ -29,6 +33,8 @@ export const ProductDetailPage: React.FC = () => {
   const [quantity, setQuantity] = useState<number>(1);
   const [activeTab, setActiveTab] = useState<'opis' | 'parametry' | 'rozmiary' | 'dostawa' | 'opinie'>('opis');
   const [addedNotice, setAddedNotice] = useState(false);
+
+  const [mediaMode, setMediaMode] = useState<'2d' | '3d'>('3d');
 
   useEffect(() => {
     if (!id) return;
@@ -92,22 +98,60 @@ export const ProductDetailPage: React.FC = () => {
         <span className="text-slate-900 font-bold truncate max-w-xs">{product.title}</span>
       </nav>
 
-      {/* TOP SECTION: ALLEGRO-STYLE (Left: Large Photo Gallery, Right: Purchase Box) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* LEFT: Large Photo & Highlights (5 cols on lg) */}
         <div className="lg:col-span-6 space-y-4">
-          <div className="bg-white rounded-3xl border border-[#EBE6DD] p-4 sm:p-8 shadow-xs relative overflow-hidden group">
-            <span className="absolute top-4 left-4 z-20 px-3 py-1 bg-purple-600 text-white font-bold text-[10px] uppercase tracking-wider rounded-full shadow-sm">
-              {product.gender === 'WOMEN' ? 'Damskie' : product.gender === 'MEN' ? 'Męskie' : 'Unisex'}
-            </span>
+          <div className="bg-white rounded-3xl border border-[#EBE6DD] p-4 sm:p-6 shadow-xs relative overflow-hidden space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-[#EBE6DD]">
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setMediaMode('3d')}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center space-x-1.5 cursor-pointer ${
+                    mediaMode === '3d'
+                      ? 'bg-purple-600 text-white shadow-xs ring-2 ring-purple-300'
+                      : 'bg-[#FAF7F2] text-slate-700 hover:bg-purple-50 hover:text-purple-700'
+                  }`}
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-yellow-300 animate-pulse" />
+                  <span>Model 3D 360°</span>
+                </button>
 
-            <div className="aspect-square w-full rounded-2xl overflow-hidden bg-[#FAF7F2] flex items-center justify-center">
-              <img
-                src={product.imageUrl}
-                alt={product.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-              />
+                <button
+                  onClick={() => setMediaMode('2d')}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center space-x-1.5 cursor-pointer ${
+                    mediaMode === '2d'
+                      ? 'bg-purple-600 text-white shadow-xs'
+                      : 'bg-[#FAF7F2] text-slate-700 hover:bg-purple-50 hover:text-purple-700'
+                  }`}
+                >
+                  <ImageIcon className="w-3.5 h-3.5" />
+                  <span>Zdjęcie 2D</span>
+                </button>
+              </div>
+
+              <span className="px-2.5 py-1 bg-purple-100 text-purple-800 font-bold text-[10px] uppercase tracking-wider rounded-full">
+                {product.gender === 'WOMEN' ? 'Damskie' : product.gender === 'MEN' ? 'Męskie' : 'Unisex'}
+              </span>
             </div>
+
+            {mediaMode === '3d' ? (
+              <div className="w-full h-[450px] sm:h-[480px] rounded-2xl overflow-hidden relative">
+                <Product3DViewer
+                  selectedColor={selectedColor}
+                  onColorChange={setSelectedColor}
+                  availableColors={product.colors}
+                  height="h-full"
+                  autoRotateDefault={true}
+                />
+              </div>
+            ) : (
+              <div className="aspect-square w-full rounded-2xl overflow-hidden bg-[#FAF7F2] flex items-center justify-center relative group">
+                <img
+                  src={product.imageUrl}
+                  alt={product.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                />
+              </div>
+            )}
           </div>
 
           {/* Guarantee Badges below image */}
