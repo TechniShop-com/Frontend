@@ -163,14 +163,6 @@ export interface ValidateCouponResult {
 
 // Pobieranie aktywnych kodów rabatowych
 export const getCouponsApi = async (): Promise<DiscountCoupon[]> => {
-  try {
-    const res = await api.get<{ coupons: DiscountCoupon[] }>('/coupons');
-    if (res.data?.coupons && Array.isArray(res.data.coupons)) {
-      return res.data.coupons;
-    }
-  } catch {
-    // Używamy fallbacku jeśli backend jest offline
-  }
   return FALLBACK_COUPONS;
 };
 
@@ -184,22 +176,6 @@ export const validateCouponApi = async (
     return { valid: false, message: 'Wpisz kod rabatowy przed zatwierdzeniem.' };
   }
 
-  try {
-    const res = await api.post<ValidateCouponResult>('/coupons/validate', {
-      code: trimmed,
-      cartTotal,
-    });
-    return res.data;
-  } catch (err: any) {
-    // Jeżeli backend zgłosił błąd biznesowy z odpowiedzią z serwera
-    if (err.response?.data?.message) {
-      return {
-        valid: false,
-        message: err.response.data.message,
-      };
-    }
-
-    // Niezawodny fallback lokalny, gdy serwer API jest wyłączony
     const coupon = FALLBACK_COUPONS.find((c) => c.code.toUpperCase() === trimmed);
     if (!coupon) {
       return {
@@ -234,6 +210,6 @@ export const validateCouponApi = async (
       finalTotal,
       isFreeShipping: coupon.type === 'FREE_SHIPPING' || cartTotal >= 200,
     };
-  }
+  
 };
 

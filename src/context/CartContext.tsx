@@ -3,10 +3,12 @@ import { CartItem, Product, DiscountCoupon } from '../types';
 import {
   getCart,
   addToCartApi,
+  updateCartItemApi,
   removeCartItemApi,
   clearCartApi,
   validateCouponApi,
 } from '../services/api';
+import { useAuth } from './AuthContext';
 
 interface ApplyCouponResponse {
   success: boolean;
