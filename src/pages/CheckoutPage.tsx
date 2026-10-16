@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
+import { PromoCodeBox } from '../components/PromoCodeBox';
 import {
   ArrowRight,
   CheckCircle2,
@@ -10,6 +11,7 @@ import {
   Building2,
   Clock,
   Sparkles,
+  Tag,
 } from 'lucide-react';
 import { createOrderApi } from '../services/api';
 
@@ -17,7 +19,15 @@ type DeliveryMethod = 'paczkomat' | 'kurier' | 'szkola';
 type PaymentMethod = 'blik' | 'karta' | 'paypo' | 'odbior';
 
 export const CheckoutPage: React.FC = () => {
-  const { cart, totalPrice, clearCart } = useCart();
+  const {
+    cart,
+    subtotalPrice,
+    discountAmount,
+    totalPrice,
+    coupon,
+    isFreeShippingPromo,
+    clearCart,
+  } = useCart();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -30,9 +40,11 @@ export const CheckoutPage: React.FC = () => {
   const [isOrdered, setIsOrdered] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const isFreeShipping = totalPrice >= 200;
+  const isFreeShipping = subtotalPrice >= 200 || isFreeShippingPromo;
   const deliveryCost = deliveryMethod === 'szkola' || isFreeShipping ? 0 : deliveryMethod === 'paczkomat' ? 14.99 : 16.99;
   const finalTotal = totalPrice + deliveryCost;
+  const originalFinalTotal = subtotalPrice + (deliveryMethod === 'szkola' || subtotalPrice >= 200 ? 0 : deliveryMethod === 'paczkomat' ? 14.99 : 16.99);
+
 
   if (isOrdered) {
     return (
@@ -47,7 +59,7 @@ export const CheckoutPage: React.FC = () => {
           zapisane w systemie TechniShop. Potwierdzenie wysłaliśmy na adres <strong>{email}</strong>.
         </p>
 
-        <div className="p-4 bg-[#FAF8F5] border border-[#E3DDD2] rounded-2xl text-left text-xs space-y-1.5 text-slate-700 font-medium">
+        <div className="p-4 bg-[#FAF8F5] border border-[#E3DDD2] rounded-2xl text-left text-xs space-y-2 text-slate-700 font-medium">
           <div className="flex justify-between">
             <span>Metoda dostawy:</span>
             <span className="font-bold">
@@ -62,6 +74,19 @@ export const CheckoutPage: React.FC = () => {
             <span>Płatność:</span>
             <span className="font-bold uppercase text-purple-700">{paymentMethod}</span>
           </div>
+          {coupon && (
+            <div className="flex justify-between items-center bg-emerald-50/80 p-2 rounded-xl border border-emerald-200 text-emerald-900 font-bold">
+              <span className="flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-yellow-500 fill-yellow-400" />
+                <span>Kod rabatowy ({coupon.code}):</span>
+              </span>
+              <span className="font-mono text-emerald-700">
+                {coupon.type === 'FREE_SHIPPING'
+                  ? 'Darmowa dostawa'
+                  : `-${discountAmount.toFixed(2)} zł`}
+              </span>
+            </div>
+          )}
         </div>
 
         <button
@@ -99,7 +124,7 @@ export const CheckoutPage: React.FC = () => {
         name,
         email,
         address: deliveryMethod === 'paczkomat' ? `Paczkomat: ${paczkomatCode}` : address,
-        paymentMethod: `${paymentMethod.toUpperCase()}${deliveryMethod === 'paczkomat' ? ' (InPost)' : ''}`,
+        paymentMethod: `${paymentMethod.toUpperCase()}${deliveryMethod === 'paczkomat' ? ' (InPost)' : ''}${coupon ? ` [Rabat: ${coupon.code}]` : ''}`,
         totalPrice: finalTotal,
         items: cart,
       });
@@ -110,6 +135,7 @@ export const CheckoutPage: React.FC = () => {
       setIsOrdered(true);
     }
   };
+
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -407,6 +433,9 @@ export const CheckoutPage: React.FC = () => {
 
           {/* RIGHT COLUMN: Sticky Order Summary (5 cols) */}
           <div className="lg:col-span-5 sticky top-24 space-y-4">
+            {/* Promo Code Box */}
+            <PromoCodeBox />
+
             <div className="bg-white border border-[#E7E2D8] rounded-3xl p-5 sm:p-6 space-y-4 shadow-xs">
               <h3 className="font-black text-sm text-slate-900 pb-2 border-b border-[#EAE4D9] flex items-center justify-between">
                 <span>Podsumowanie Zamówienia</span>
@@ -441,13 +470,26 @@ export const CheckoutPage: React.FC = () => {
               <div className="space-y-2 pt-3 border-t border-[#EAE4D9] text-xs font-medium text-slate-600">
                 <div className="flex justify-between">
                   <span>Wartość koszyka:</span>
-                  <span className="font-bold text-slate-900">{totalPrice.toFixed(2)} zł</span>
+                  <span className="font-bold text-slate-900">{subtotalPrice.toFixed(2)} zł</span>
                 </div>
+
+                {coupon && discountAmount > 0 && (
+                  <div className="flex justify-between items-center text-emerald-700 font-bold">
+                    <span className="flex items-center gap-1">
+                      <Sparkles className="w-3.5 h-3.5 text-yellow-500 fill-yellow-400" />
+                      <span>Rabat ({coupon.code}):</span>
+                    </span>
+                    <span className="font-mono">-{discountAmount.toFixed(2)} zł</span>
+                  </div>
+                )}
+
                 <div className="flex justify-between">
                   <span>Dostawa:</span>
                   <span className="font-bold">
                     {deliveryCost === 0 ? (
-                      <span className="text-emerald-600 font-bold">0.00 zł (Darmowa)</span>
+                      <span className="text-emerald-600 font-bold">
+                        0.00 zł (Darmowa{isFreeShippingPromo ? ' - kod' : ''})
+                      </span>
                     ) : (
                       `${deliveryCost.toFixed(2)} zł`
                     )}
@@ -456,9 +498,19 @@ export const CheckoutPage: React.FC = () => {
 
                 <div className="border-t border-[#DDD8CD] pt-3 flex justify-between items-baseline text-sm">
                   <span className="font-black text-slate-900">Razem do zapłaty:</span>
-                  <span className="text-2xl font-black text-purple-700">{finalTotal.toFixed(2)} zł</span>
+                  <div className="text-right">
+                    {discountAmount > 0 && (
+                      <span className="line-through text-xs text-slate-400 font-semibold mr-2 font-mono">
+                        {originalFinalTotal.toFixed(2)} zł
+                      </span>
+                    )}
+                    <span className="text-2xl font-black text-purple-700 font-mono">
+                      {finalTotal.toFixed(2)} zł
+                    </span>
+                  </div>
                 </div>
               </div>
+
 
               {/* Submit CTA */}
               <div className="pt-2">

@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { PromoCodeBox } from './PromoCodeBox';
 import {
   X,
   Trash2,
@@ -11,12 +12,17 @@ import {
   Truck,
   Check,
   ShieldCheck,
+  Sparkles,
 } from 'lucide-react';
 
 export const CartDrawer: React.FC = () => {
   const {
     cart,
+    subtotalPrice,
+    discountAmount,
     totalPrice,
+    coupon,
+    isFreeShippingPromo,
     removeFromCart,
     updateQuantity,
     isCartDrawerOpen,
@@ -50,11 +56,14 @@ export const CartDrawer: React.FC = () => {
   if (!isCartDrawerOpen) return null;
 
   const freeShippingThreshold = 200;
-  const remainingForFreeShipping = Math.max(0, freeShippingThreshold - totalPrice);
-  const progressPercent = Math.min(100, Math.round((totalPrice / freeShippingThreshold) * 100));
-  const isFreeShipping = totalPrice >= freeShippingThreshold;
-  const deliveryCost = isFreeShipping || totalPrice === 0 ? 0 : 14.99;
+  const isFreeShipping = subtotalPrice >= freeShippingThreshold || isFreeShippingPromo;
+  const remainingForFreeShipping = Math.max(0, freeShippingThreshold - subtotalPrice);
+  const progressPercent = isFreeShippingPromo
+    ? 100
+    : Math.min(100, Math.round((subtotalPrice / freeShippingThreshold) * 100));
+  const deliveryCost = isFreeShipping || subtotalPrice === 0 ? 0 : 14.99;
   const totalWithShipping = totalPrice + deliveryCost;
+  const originalTotalWithShipping = subtotalPrice + (subtotalPrice >= freeShippingThreshold ? 0 : 14.99);
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
@@ -84,14 +93,15 @@ export const CartDrawer: React.FC = () => {
             </button>
           </div>
 
-          {/* Dynamic Free Shipping Progress Bar (Zalando / Reserved standard) */}
+          {/* Dynamic Free Shipping Progress Bar */}
           <div className="px-5 py-3.5 bg-[#F2EDE2] border-b border-[#E3DDD2]">
             <div className="flex items-center justify-between text-xs font-bold text-slate-700 mb-1.5">
               <span className="flex items-center gap-1.5">
                 <Truck className="w-4 h-4 text-purple-600" />
                 {isFreeShipping ? (
                   <span className="text-emerald-700 font-black flex items-center gap-1">
-                    <Check className="w-3.5 h-3.5 text-emerald-600" /> Masz DARMOWĄ dostawę!
+                    <Check className="w-3.5 h-3.5 text-emerald-600" />{' '}
+                    {isFreeShippingPromo ? 'Kod aktywny: DARMOWA DOSTAWA!' : 'Masz DARMOWĄ dostawę!'}
                   </span>
                 ) : (
                   <span>
@@ -120,58 +130,56 @@ export const CartDrawer: React.FC = () => {
                 <div className="w-16 h-16 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center border border-purple-200 shadow-xs">
                   <ShoppingBag className="w-8 h-8 stroke-[1.5]" />
                 </div>
-                <div>
+                <div className="space-y-1">
                   <h3 className="font-extrabold text-sm text-slate-800">Twój koszyk jest pusty</h3>
-                  <p className="text-xs text-slate-500 mt-1 max-w-xs">
-                    Odkryj najnowszą kolekcję odzieży i akcesoriów Techni.
-                  </p>
+                  <p className="text-xs text-slate-500">Wybierz coś z naszej szkolnej kolekcji!</p>
                 </div>
                 <button
                   onClick={() => {
                     closeCartDrawer();
                     navigate('/products');
                   }}
-                  className="px-5 py-2.5 text-xs font-black text-white bg-purple-600 hover:bg-purple-700 active:bg-purple-800 rounded-xl shadow-xs transition-colors cursor-pointer"
+                  className="px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-black shadow-xs transition-colors cursor-pointer"
                 >
                   Przeglądaj produkty
                 </button>
               </div>
             ) : (
               cart.map((item, index) => (
-                <div key={index} className="py-3.5 first:pt-0 flex items-start space-x-3.5">
+                <div key={index} className="py-3.5 first:pt-0 last:pb-0 flex items-center space-x-3.5">
                   <img
                     src={item.product.imageUrl}
                     alt={item.product.title}
-                    className="w-16 h-20 object-cover rounded-xl border border-[#E3DDD2] bg-white shrink-0"
+                    className="w-16 h-20 object-cover rounded-xl border border-[#DDD8CD] bg-white shrink-0"
                   />
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-extrabold text-xs text-slate-900 truncate">
-                      {item.product.title}
-                    </h4>
-                    <p className="text-[11px] text-slate-500 mt-0.5 font-medium">
-                      Kolor: <span className="font-bold text-slate-700">{item.selectedColor}</span> | Rozmiar:{' '}
-                      <span className="font-bold text-purple-700">{item.selectedSize}</span>
+                    <span className="text-[9px] font-black uppercase tracking-wider text-purple-700">
+                      {item.product.brand === 'TECHNI_ZDALNI' ? 'Techni Zdalni' : 'Techni Schools'}
+                    </span>
+                    <h4 className="font-extrabold text-xs text-slate-900 truncate">{item.product.title}</h4>
+                    <p className="text-[11px] text-slate-500 font-medium">
+                      {item.selectedColor} &bull; {item.selectedSize}
                     </p>
-                    <div className="text-xs font-black text-purple-700 mt-1">
+                    <div className="font-black text-xs text-purple-700 mt-1">
                       {(item.product.price * item.quantity).toFixed(2)} zł
                     </div>
 
-                    {/* Quantity Controls */}
+                    {/* Quantity controls */}
                     <div className="flex items-center justify-between mt-2">
-                      <div className="flex items-center border border-[#DDD8CD] rounded-lg bg-white p-0.5">
+                      <div className="flex items-center border border-[#DDD8CD] rounded-lg bg-white">
                         <button
                           onClick={() => updateQuantity(index, -1)}
-                          className="w-6 h-6 rounded flex items-center justify-center text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition-colors"
+                          className="w-6 h-6 flex items-center justify-center text-slate-600 hover:text-purple-600 font-bold text-xs"
                           title="Zmniejsz ilość"
                         >
                           <Minus className="w-3 h-3" />
                         </button>
-                        <span className="w-7 text-center font-bold text-xs text-slate-800">
+                        <span className="w-6 text-center text-xs font-extrabold text-slate-900">
                           {item.quantity}
                         </span>
                         <button
                           onClick={() => updateQuantity(index, 1)}
-                          className="w-6 h-6 rounded flex items-center justify-center text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition-colors"
+                          className="w-6 h-6 flex items-center justify-center text-slate-600 hover:text-purple-600 font-bold text-xs"
                           title="Zwiększ ilość"
                         >
                           <Plus className="w-3 h-3" />
@@ -180,7 +188,7 @@ export const CartDrawer: React.FC = () => {
 
                       <button
                         onClick={() => removeFromCart(index)}
-                        className="text-slate-400 hover:text-red-500 p-1 transition-colors"
+                        className="text-slate-400 hover:text-red-500 p-1 transition-colors cursor-pointer"
                         title="Usuń pozycję"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -194,13 +202,27 @@ export const CartDrawer: React.FC = () => {
 
           {/* Footer & Checkout Trigger */}
           {cart.length > 0 && (
-            <div className="p-5 bg-[#F2EDE2] border-t border-[#E3DDD2] space-y-3">
+            <div className="p-4 sm:p-5 bg-[#F2EDE2] border-t border-[#E3DDD2] space-y-3">
+              {/* Promo code input box */}
+              <PromoCodeBox />
+
               {/* Financial summary breakdown */}
-              <div className="space-y-1.5 text-xs text-slate-600 font-medium">
+              <div className="space-y-1.5 text-xs text-slate-600 font-medium pt-1">
                 <div className="flex justify-between">
                   <span>Wartość produktów:</span>
-                  <span className="font-bold text-slate-800">{totalPrice.toFixed(2)} zł</span>
+                  <span className="font-bold text-slate-800">{subtotalPrice.toFixed(2)} zł</span>
                 </div>
+
+                {coupon && discountAmount > 0 && (
+                  <div className="flex justify-between items-center text-emerald-700 font-bold">
+                    <span className="flex items-center gap-1">
+                      <Sparkles className="w-3.5 h-3.5 text-yellow-500 fill-yellow-400" />
+                      <span>Rabat ({coupon.code}):</span>
+                    </span>
+                    <span className="font-mono">-{discountAmount.toFixed(2)} zł</span>
+                  </div>
+                )}
+
                 <div className="flex justify-between items-center">
                   <span className="flex items-center gap-1">
                     <span>Dostawa do Paczkomatu:</span>
@@ -213,11 +235,19 @@ export const CartDrawer: React.FC = () => {
                     )}
                   </span>
                 </div>
+
                 <div className="border-t border-[#DDD8CD] pt-2 flex justify-between items-baseline text-sm">
                   <span className="font-black text-slate-900">Do zapłaty:</span>
-                  <span className="text-xl font-black text-purple-700">
-                    {totalWithShipping.toFixed(2)} zł
-                  </span>
+                  <div className="text-right">
+                    {discountAmount > 0 && (
+                      <span className="line-through text-xs text-slate-400 font-semibold mr-2 font-mono">
+                        {originalTotalWithShipping.toFixed(2)} zł
+                      </span>
+                    )}
+                    <span className="text-xl font-black text-purple-700 font-mono">
+                      {totalWithShipping.toFixed(2)} zł
+                    </span>
+                  </div>
                 </div>
               </div>
 

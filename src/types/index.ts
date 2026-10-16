@@ -28,3 +28,14 @@ export interface User {
   avatarUrl?: string;
 }
 
+export type CouponDiscountType = 'PERCENTAGE' | 'FIXED' | 'FREE_SHIPPING';
+
+export interface DiscountCoupon {
+  code: string;
+  type: CouponDiscountType;
+  value: number; // np. 20 (dla 20%) lub 30 (dla 30 zł)
+  description: string;
+  minOrderValue?: number;
+}
+
+
