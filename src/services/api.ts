@@ -234,3 +234,187 @@ export const validateCouponApi = async (
   }
 };
 
+// ==========================================
+// SYSTEM RECENZJI I OCEN (PRODUCT REVIEWS)
+// ==========================================
+
+import { ProductReview, ReviewStats } from '../types';
+
+export const INITIAL_REVIEWS: ProductReview[] = [
+  {
+    id: 'rev-1',
+    productId: 'hoodie-1',
+    authorName: 'Kacper M. (Techni Lublin)',
+    rating: 5,
+    comment: 'Jakość materiału jest rewelacyjna. Bardzo wygodna, krój idealnie leży i świetnie wygląda na korytarzach szkoły!',
+    date: '2 dni temu',
+    verifiedPurchase: true,
+    helpfulCount: 14,
+    isStudent: true,
+  },
+  {
+    id: 'rev-2',
+    productId: 'hoodie-1',
+    authorName: 'Weronika K.',
+    rating: 5,
+    comment: 'Szybka dostawa paczkomatem i genialny fioletowy odcień. Rozmiar M pasuje idealnie zgodnie z tabelą.',
+    date: 'W zeszłym tygodniu',
+    verifiedPurchase: true,
+    helpfulCount: 8,
+    isStudent: false,
+  },
+  {
+    id: 'rev-3',
+    productId: 'hoodie-1',
+    authorName: 'Michał Z. (Techni Zdalni)',
+    rating: 4,
+    comment: 'Ciepła i miła w dotyku bawełna. Dobrze znosi pranie, nadruk nie pęka. Polecam każdemu z platformy zdalnej.',
+    date: '2 tygodnie temu',
+    verifiedPurchase: true,
+    helpfulCount: 5,
+    isStudent: true,
+  },
+  {
+    id: 'rev-4',
+    productId: 'tshirt-1',
+    authorName: 'Bartek P.',
+    rating: 5,
+    comment: 'Świetny minimalistyczny t-shirt z logiem. Materiał oddychający, idealny na codzienne zajęcia.',
+    date: '3 dni temu',
+    verifiedPurchase: true,
+    helpfulCount: 6,
+    isStudent: true,
+  },
+  {
+    id: 'rev-5',
+    productId: 'backpack-1',
+    authorName: 'Oliwia S.',
+    rating: 5,
+    comment: 'Pojemny plecak, bez problemu mieści laptopa 15.6 cala i wszystkie zeszyty. Dużo wygodnych przegródek.',
+    date: 'Wczoraj',
+    verifiedPurchase: true,
+    helpfulCount: 11,
+    isStudent: true,
+  },
+];
+
+function getLocalStoredReviews(): ProductReview[] {
+  try {
+    const saved = localStorage.getItem('technishop_reviews');
+    if (saved) return JSON.parse(saved);
+  } catch {}
+  return INITIAL_REVIEWS;
+}
+
+function saveLocalReviews(reviews: ProductReview[]) {
+  try {
+    localStorage.setItem('technishop_reviews', JSON.stringify(reviews));
+  } catch {}
+}
+
+export function computeReviewStats(reviews: ProductReview[]): ReviewStats {
+  if (reviews.length === 0) {
+    return {
+      averageRating: 5.0,
+      totalReviews: 0,
+      recommendationPercentage: 100,
+      ratingDistribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
+    };
+  }
+
+  const distribution: { 5: number; 4: number; 3: number; 2: number; 1: number } = {
+    5: 0,
+    4: 0,
+    3: 0,
+    2: 0,
+    1: 0,
+  };
+  let sum = 0;
+  let recommended = 0;
+
+  for (const r of reviews) {
+    const star = (Math.min(5, Math.max(1, Math.round(r.rating))) as 1 | 2 | 3 | 4 | 5);
+    distribution[star] = (distribution[star] || 0) + 1;
+    sum += r.rating;
+    if (r.rating >= 4) recommended++;
+  }
+
+  return {
+    averageRating: Math.round((sum / reviews.length) * 10) / 10,
+    totalReviews: reviews.length,
+    recommendationPercentage: Math.round((recommended / reviews.length) * 100),
+    ratingDistribution: distribution,
+  };
+}
+
+export const getProductReviewsApi = async (
+  productId: string
+): Promise<{ reviews: ProductReview[]; stats: ReviewStats }> => {
+  try {
+    const res = await api.get<{ reviews: ProductReview[]; stats: ReviewStats }>(`/reviews/${productId}`);
+    if (res.data?.reviews) {
+      return res.data;
+    }
+  } catch {}
+
+  const allLocal = getLocalStoredReviews();
+  const productReviews = allLocal.filter((r) => r.productId === productId);
+  return {
+    reviews: productReviews,
+    stats: computeReviewStats(productReviews),
+  };
+};
+
+export const addProductReviewApi = async (
+  productId: string,
+  data: { authorName: string; rating: number; comment: string; isStudent?: boolean }
+): Promise<{ review: ProductReview; stats: ReviewStats; message: string }> => {
+  try {
+    const res = await api.post(`/reviews/${productId}`, data);
+    if (res.data?.review) {
+      return res.data;
+    }
+  } catch {}
+
+  const allLocal = getLocalStoredReviews();
+  const newRev: ProductReview = {
+    id: `rev-${Date.now()}`,
+    productId,
+    authorName: data.authorName.trim(),
+    rating: data.rating,
+    comment: data.comment.trim(),
+    date: 'Dzisiaj',
+    verifiedPurchase: true,
+    helpfulCount: 0,
+    isStudent: Boolean(data.isStudent),
+  };
+  const updatedAll = [newRev, ...allLocal];
+  saveLocalReviews(updatedAll);
+
+  const productReviews = updatedAll.filter((r) => r.productId === productId);
+  return {
+    review: newRev,
+    stats: computeReviewStats(productReviews),
+    message: 'Opinia została pomyślnie dodana!',
+  };
+};
+
+export const likeReviewApi = async (reviewId: string): Promise<number> => {
+  try {
+    const res = await api.post<{ helpfulCount: number }>(`/reviews/${reviewId}/helpful`);
+    if (typeof res.data?.helpfulCount === 'number') {
+      return res.data.helpfulCount;
+    }
+  } catch {}
+
+  const allLocal = getLocalStoredReviews();
+  const rev = allLocal.find((r) => r.id === reviewId);
+  if (rev) {
+    rev.helpfulCount += 1;
+    saveLocalReviews(allLocal);
+    return rev.helpfulCount;
+  }
+  return 1;
+};
+
+
