@@ -4,8 +4,9 @@ import { MOCK_PRODUCTS } from '../mockData';
 import { Product } from '../types';
 import { getProducts } from '../services/api';
 import { useCart } from '../context/CartContext';
-import { ShoppingBag, Star, Zap, Check, Loader2, Heart, Sparkles, Box } from 'lucide-react';
+import { ShoppingBag, Star, Zap, Check, Loader2, Heart, Sparkles, Box, Ruler, UserCheck } from 'lucide-react';
 import { Model3DModal } from '../components/Model3DModal';
+import { FitFinderModal, loadSavedFitProfile, FitProfile } from '../components/FitFinderModal';
 
 const getColorHex = (colorName: string): string => {
   const c = colorName.toLowerCase();
@@ -31,6 +32,14 @@ export const ProductsPage: React.FC = () => {
   const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
   const [loading, setLoading] = useState(true);
   const [modal3DProduct, setModal3DProduct] = useState<Product | null>(null);
+  const [isFitFinderOpen, setIsFitFinderOpen] = useState(false);
+  const [fitProfile, setFitProfile] = useState<FitProfile | null>(() => loadSavedFitProfile());
+
+  useEffect(() => {
+    const syncProfile = () => setFitProfile(loadSavedFitProfile());
+    window.addEventListener('fitProfileUpdated', syncProfile);
+    return () => window.removeEventListener('fitProfileUpdated', syncProfile);
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -116,13 +125,41 @@ export const ProductsPage: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      {/* Toast Notice */}
       {quickNotice && (
         <div className="fixed bottom-6 right-6 z-50 bg-purple-600 text-white px-6 py-3 rounded-2xl shadow-2xl font-black text-xs flex items-center space-x-2 anim-wiggle">
           <Check className="w-5 h-5 text-yellow-300" />
           <span>{quickNotice}</span>
         </div>
       )}
+
+      <div className="bg-gradient-to-r from-[#1E1B4B] via-[#3B0764] to-[#1E1B4B] rounded-3xl p-4 sm:p-5 text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md border border-purple-500/20">
+        <div className="flex items-center space-x-3.5">
+          <div className="w-10 h-10 rounded-2xl bg-purple-500/30 border border-purple-400/40 flex items-center justify-center shrink-0">
+            <Ruler className="w-5 h-5 text-yellow-300" />
+          </div>
+          <div>
+            <div className="text-xs sm:text-sm font-black tracking-tight flex items-center space-x-2">
+              <span>Nie wiesz jaki rozmiar wybrać?</span>
+              {fitProfile && (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                  Twój rozmiar AI: {fitProfile.recommendedSize} ({fitProfile.confidence}%)
+                </span>
+              )}
+            </div>
+            <p className="text-[11px] text-purple-200/80 font-medium">
+              Podaj wzrost, wagę oraz preferowany krój, a nasz kalkulator FitFinder AI dobierze idealny rozmiar w 5 sekund.
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => setIsFitFinderOpen(true)}
+          className="px-4 py-2.5 rounded-xl bg-white text-purple-950 hover:bg-purple-50 font-black text-xs shrink-0 flex items-center space-x-1.5 shadow-sm transition-all cursor-pointer"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+          <span>{fitProfile ? 'Zmień profil rozmiaru AI' : 'Uruchom Asystenta Rozmiaru AI'}</span>
+        </button>
+      </div>
 
       {loading && products.length === 0 ? (
         <div className="flex justify-center items-center py-24">
@@ -152,7 +189,6 @@ export const ProductsPage: React.FC = () => {
                 onClick={() => navigate(`/product/${product.id}`)}
                 className="group bg-white rounded-3xl border border-[#E7E2D8] hover:border-purple-300 p-4 sm:p-5 flex flex-col justify-between shadow-xs hover:shadow-xl hover:shadow-purple-950/8 hover:-translate-y-1 transition-all duration-300 cursor-pointer relative"
               >
-                {/* Product Image Container (Modern 3:4 fashion ratio) */}
                 <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-[#FAF7F2] border border-[#EBE6DD] mb-4">
                   <img
                     src={product.imageUrl}
@@ -160,7 +196,6 @@ export const ProductsPage: React.FC = () => {
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                   />
 
-                  {/* Badges on Image */}
                   <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 z-10">
                     <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-purple-600 text-white shadow-xs">
                       {product.gender === 'WOMEN'
@@ -181,9 +216,15 @@ export const ProductsPage: React.FC = () => {
                       <Box className="w-3 h-3 text-yellow-300 animate-pulse" />
                       <span>Podgląd 3D</span>
                     </button>
+
+                    {fitProfile && product.sizes.includes(fitProfile.recommendedSize) && (
+                      <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black bg-emerald-600 text-white shadow-xs flex items-center space-x-1">
+                        <UserCheck className="w-2.5 h-2.5" />
+                        <span>Twój rozmiar: {fitProfile.recommendedSize}</span>
+                      </span>
+                    )}
                   </div>
 
-                  {/* Wishlist Heart Button */}
                   <button
                     onClick={(e) => toggleWishlist(e, product.id)}
                     className={`absolute top-2.5 right-2.5 z-20 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 shadow-xs cursor-pointer ${
@@ -196,12 +237,10 @@ export const ProductsPage: React.FC = () => {
                     <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-current text-rose-500' : ''}`} />
                   </button>
 
-                  {/* Brand Tag Bottom Right */}
                   <span className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-[#FAF7F2]/95 text-purple-900 shadow-xs border border-[#E2DDD3] z-10">
                     {product.brand === 'TECHNI_ZDALNI' ? 'Techni Zdalni' : 'Techni Schools'}
                   </span>
 
-                  {/* Quick Size Picker on Hover (Reserved / Zara / Gymshark style) */}
                   {product.sizes && product.sizes.length > 0 && (
                     <div className="absolute inset-x-2 bottom-2 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1.5 group-hover:translate-y-0 flex items-center justify-center gap-1 bg-white/95 backdrop-blur-md p-1.5 rounded-xl border border-slate-200 shadow-md">
                       <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider mr-0.5">
@@ -211,7 +250,11 @@ export const ProductsPage: React.FC = () => {
                         <button
                           key={sz}
                           onClick={(e) => handleQuickSizeAdd(e, product, sz)}
-                          className="min-w-6 h-6 px-1.5 text-[10px] font-black rounded-md bg-[#FAF7F2] hover:bg-purple-600 hover:text-white text-slate-800 border border-[#DDD8CD] transition-all flex items-center justify-center hover:scale-105 active:scale-95"
+                          className={`min-w-6 h-6 px-1.5 text-[10px] font-black rounded-md transition-all flex items-center justify-center hover:scale-105 active:scale-95 ${
+                            fitProfile?.recommendedSize === sz
+                              ? 'bg-emerald-600 text-white border border-emerald-700'
+                              : 'bg-[#FAF7F2] hover:bg-purple-600 hover:text-white text-slate-800 border border-[#DDD8CD]'
+                          }`}
                           title={`Kup rozmiar ${sz}`}
                         >
                           {sz}
@@ -221,7 +264,6 @@ export const ProductsPage: React.FC = () => {
                   )}
                 </div>
 
-                {/* Info & Rating */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-1 text-yellow-500 text-xs font-bold">
@@ -231,7 +273,6 @@ export const ProductsPage: React.FC = () => {
                       <span className="text-slate-400 text-[10px] font-normal ml-1">(5.0)</span>
                     </div>
 
-                    {/* Color Swatch Dots */}
                     <div className="flex items-center space-x-1.5" title={`Kolory: ${product.colors.join(', ')}`}>
                       {product.colors.slice(0, 3).map((col) => (
                         <span
@@ -263,7 +304,6 @@ export const ProductsPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Primary Action Button */}
                 <div className="pt-3.5">
                   <button
                     onClick={(e) => handleQuickAdd(e, product)}
@@ -279,11 +319,15 @@ export const ProductsPage: React.FC = () => {
         </div>
       )}
 
-      {/* 3D PREVIEW MODAL */}
       <Model3DModal
         product={modal3DProduct}
         isOpen={!!modal3DProduct}
         onClose={() => setModal3DProduct(null)}
+      />
+
+      <FitFinderModal
+        isOpen={isFitFinderOpen}
+        onClose={() => setIsFitFinderOpen(false)}
       />
     </div>
   );

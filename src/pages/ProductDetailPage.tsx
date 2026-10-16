@@ -5,6 +5,7 @@ import { Product } from '../types';
 import { getProductById } from '../services/api';
 import { useCart } from '../context/CartContext';
 import { Product3DViewer } from '../components/Product3DViewer';
+import { FitFinderModal, loadSavedFitProfile, FitProfile } from '../components/FitFinderModal';
 import {
   Check,
   ShoppingBag,
@@ -17,7 +18,8 @@ import {
   Clock,
   Box,
   Sparkles,
-  Image as ImageIcon
+  Image as ImageIcon,
+  UserCheck
 } from 'lucide-react';
 
 export const ProductDetailPage: React.FC = () => {
@@ -35,6 +37,14 @@ export const ProductDetailPage: React.FC = () => {
   const [addedNotice, setAddedNotice] = useState(false);
 
   const [mediaMode, setMediaMode] = useState<'2d' | '3d'>('3d');
+  const [isFitFinderOpen, setIsFitFinderOpen] = useState(false);
+  const [fitProfile, setFitProfile] = useState<FitProfile | null>(() => loadSavedFitProfile());
+
+  useEffect(() => {
+    const syncProfile = () => setFitProfile(loadSavedFitProfile());
+    window.addEventListener('fitProfileUpdated', syncProfile);
+    return () => window.removeEventListener('fitProfileUpdated', syncProfile);
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -44,7 +54,12 @@ export const ProductDetailPage: React.FC = () => {
         if (data) {
           setProduct(data);
           setSelectedColor(data.colors[0] || 'Domyślny');
-          setSelectedSize(data.sizes[0] || 'M');
+          const saved = loadSavedFitProfile();
+          if (saved && data.sizes.includes(saved.recommendedSize)) {
+            setSelectedSize(saved.recommendedSize);
+          } else {
+            setSelectedSize(data.sizes[0] || 'M');
+          }
         }
       } catch (err) {
         console.warn('Backend niedostępny, używam produktu mock:', err);
@@ -243,38 +258,75 @@ export const ProductDetailPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Size Selector */}
-          <div className="space-y-2.5 pt-2">
-            <div className="flex items-center justify-between">
+          <div className="space-y-3 pt-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <label className="text-xs font-bold text-slate-800 uppercase tracking-wider">
                 Rozmiar: <span className="text-purple-700 font-semibold normal-case">{selectedSize}</span>
               </label>
-              <button
-                onClick={() => {
-                  setActiveTab('rozmiary');
-                  const elem = document.getElementById('details-section');
-                  elem?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="text-[11px] font-bold text-purple-600 hover:underline flex items-center space-x-1"
-              >
-                <Ruler className="w-3.5 h-3.5" />
-                <span>Tabela rozmiarów</span>
-              </button>
+              <div className="flex items-center space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setIsFitFinderOpen(true)}
+                  className="px-3 py-1 rounded-full text-[11px] font-black bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 shadow-xs flex items-center space-x-1.5 transition-all cursor-pointer"
+                >
+                  <Sparkles className="w-3 h-3 text-yellow-300" />
+                  <span>Asystent Rozmiaru AI</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab('rozmiary');
+                    const elem = document.getElementById('details-section');
+                    elem?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="text-[11px] font-bold text-purple-600 hover:underline flex items-center space-x-1"
+                >
+                  <Ruler className="w-3.5 h-3.5" />
+                  <span>Tabela rozmiarów</span>
+                </button>
+              </div>
             </div>
+
+            {fitProfile && product.sizes.includes(fitProfile.recommendedSize) && (
+              <div className="flex items-center justify-between bg-emerald-50/90 border border-emerald-200 px-3.5 py-2 rounded-xl text-xs">
+                <div className="flex items-center space-x-2 text-emerald-900 font-bold">
+                  <UserCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>
+                    Twój rozmiar FitFinder AI: <strong>{fitProfile.recommendedSize}</strong> ({fitProfile.confidence}% dopasowania dla {fitProfile.height}cm / {fitProfile.weight}kg)
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsFitFinderOpen(true)}
+                  className="text-[11px] font-black text-emerald-700 hover:underline ml-2 shrink-0 cursor-pointer"
+                >
+                  Zmień
+                </button>
+              </div>
+            )}
+
             <div className="flex flex-wrap gap-2.5">
               {product.sizes.map((size) => {
                 const isSelected = selectedSize === size;
+                const isRecommended = fitProfile?.recommendedSize === size;
                 return (
                   <button
                     key={size}
                     onClick={() => setSelectedSize(size)}
-                    className={`min-w-11 px-3.5 py-2 rounded-xl text-xs font-medium border transition-all text-center ${
+                    className={`relative min-w-11 px-3.5 py-2 rounded-xl text-xs font-medium border transition-all text-center cursor-pointer ${
                       isSelected
                         ? 'border-purple-600 bg-purple-600 text-white font-bold shadow-xs'
+                        : isRecommended
+                        ? 'border-emerald-500 bg-emerald-50/60 text-emerald-900 font-bold hover:bg-emerald-100'
                         : 'border-[#DDD8CD] bg-[#FAF7F2] text-slate-700 hover:border-purple-300 hover:bg-white'
                     }`}
                   >
                     {size}
+                    {isRecommended && (
+                      <span className=" -top-2 -right-1.5 px-1.5 py-0.2 bg-emerald-500 text-white text-[8px] font-black rounded-full uppercase shadow-2xs ml-1.5">
+                        AI
+                      </span>
+                    )}
                   </button>
                 );
               })}
@@ -613,6 +665,14 @@ export const ProductDetailPage: React.FC = () => {
           <span>DODAJ DO KOSZYKA</span>
         </button>
       </div>
+
+      <FitFinderModal
+        isOpen={isFitFinderOpen}
+        onClose={() => setIsFitFinderOpen(false)}
+        productTitle={product.title}
+        availableSizes={product.sizes}
+        onSelectSize={(size) => setSelectedSize(size)}
+      />
     </div>
   );
 };

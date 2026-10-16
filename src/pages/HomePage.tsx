@@ -20,7 +20,8 @@ import { useCart } from '../context/CartContext';
 import { HeroSlider } from '../components/HeroSlider';
 import { Home3DShowcase } from '../components/Home3DShowcase';
 import { Model3DModal } from '../components/Model3DModal';
-import { Box } from 'lucide-react';
+import { FitFinderModal, loadSavedFitProfile, FitProfile } from '../components/FitFinderModal';
+import { Box, Ruler, UserCheck } from 'lucide-react';
 
 const getColorHex = (colorName: string): string => {
   const c = colorName.toLowerCase();
@@ -48,6 +49,14 @@ export const HomePage: React.FC<HomePageProps> = () => {
   const [quickNotice, setQuickNotice] = useState<string | null>(null);
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [modal3DProduct, setModal3DProduct] = useState<Product | null>(null);
+  const [isFitFinderOpen, setIsFitFinderOpen] = useState(false);
+  const [fitProfile, setFitProfile] = useState<FitProfile | null>(() => loadSavedFitProfile());
+
+  useEffect(() => {
+    const syncProfile = () => setFitProfile(loadSavedFitProfile());
+    window.addEventListener('fitProfileUpdated', syncProfile);
+    return () => window.removeEventListener('fitProfileUpdated', syncProfile);
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -170,9 +179,8 @@ export const HomePage: React.FC<HomePageProps> = () => {
         </div>
       )}
 
-      {/* FEATURED PRODUCTS SECTION */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        <div className="flex items-center justify-between border-b border-[#E8E2D8] pb-4">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#E8E2D8] pb-4">
           <div>
             <h2 className="text-2xl font-black text-slate-900 tracking-tight flex items-center space-x-2">
               <Zap className="w-5 h-5 text-purple-600" />
@@ -183,16 +191,29 @@ export const HomePage: React.FC<HomePageProps> = () => {
             </p>
           </div>
 
-          <Link
-            to="/products"
-            className="text-xs font-black text-purple-700 hover:text-purple-900 flex items-center space-x-1 hover:underline"
-          >
-            <span>Zobacz wszystko</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => setIsFitFinderOpen(true)}
+              className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-black text-xs flex items-center space-x-1.5 shadow-xs transition-all cursor-pointer"
+            >
+              <Ruler className="w-3.5 h-3.5 text-yellow-300" />
+              <span>
+                {fitProfile
+                  ? `Twój rozmiar AI: ${fitProfile.recommendedSize}`
+                  : 'Dobierz rozmiar z AI'}
+              </span>
+            </button>
+
+            <Link
+              to="/products"
+              className="text-xs font-black text-purple-700 hover:text-purple-900 flex items-center space-x-1 hover:underline"
+            >
+              <span>Zobacz wszystko</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
         </div>
 
-        {/* Loading Spinner / Product Grid */}
         {loading && products.length === 0 ? (
           <div className="flex justify-center items-center py-16">
             <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
@@ -209,7 +230,6 @@ export const HomePage: React.FC<HomePageProps> = () => {
                   onClick={() => navigate(`/product/${product.id}`)}
                   className="group bg-white rounded-3xl border border-[#E7E2D8] hover:border-purple-300 p-4 sm:p-5 flex flex-col justify-between shadow-xs hover:shadow-xl hover:shadow-purple-950/8 hover:-translate-y-1 transition-all duration-300 cursor-pointer relative"
                 >
-                  {/* Product Image Container (3:4 ratio) */}
                   <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-[#FAF7F2] border border-[#EBE6DD] mb-4">
                     <img
                       src={product.imageUrl}
@@ -217,7 +237,6 @@ export const HomePage: React.FC<HomePageProps> = () => {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                     />
 
-                    {/* Gender & 3D Badges */}
                     <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 z-10">
                       <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-purple-600 text-white shadow-xs">
                         {product.gender === 'WOMEN'
@@ -238,9 +257,15 @@ export const HomePage: React.FC<HomePageProps> = () => {
                         <Box className="w-3 h-3 text-yellow-300 animate-pulse" />
                         <span>Podgląd 3D</span>
                       </button>
+
+                      {fitProfile && product.sizes.includes(fitProfile.recommendedSize) && (
+                        <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black bg-emerald-600 text-white shadow-xs flex items-center space-x-1">
+                          <UserCheck className="w-2.5 h-2.5" />
+                          <span>Twój rozmiar: {fitProfile.recommendedSize}</span>
+                        </span>
+                      )}
                     </div>
 
-                    {/* Wishlist Heart Button */}
                     <button
                       onClick={(e) => toggleWishlist(e, product.id)}
                       className={`absolute top-2.5 right-2.5 z-20 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 shadow-xs cursor-pointer ${
@@ -253,12 +278,10 @@ export const HomePage: React.FC<HomePageProps> = () => {
                       <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-current text-rose-500' : ''}`} />
                     </button>
 
-                    {/* Brand Tag Bottom Right */}
                     <span className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-[#FAF7F2]/95 text-purple-900 shadow-xs border border-[#E2DDD3] z-10">
                       {product.brand === 'TECHNI_ZDALNI' ? 'Techni Zdalni' : 'Techni Schools'}
                     </span>
 
-                    {/* Quick Size Picker on Hover */}
                     {product.sizes && product.sizes.length > 0 && (
                       <div className="absolute inset-x-2 bottom-2 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1.5 group-hover:translate-y-0 flex items-center justify-center gap-1 bg-white/95 backdrop-blur-md p-1.5 rounded-xl border border-slate-200 shadow-md">
                         <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider mr-0.5">
@@ -268,7 +291,11 @@ export const HomePage: React.FC<HomePageProps> = () => {
                           <button
                             key={sz}
                             onClick={(e) => handleQuickSizeAdd(e, product, sz)}
-                            className="min-w-6 h-6 px-1.5 text-[10px] font-black rounded-md bg-[#FAF7F2] hover:bg-purple-600 hover:text-white text-slate-800 border border-[#DDD8CD] transition-all flex items-center justify-center hover:scale-105 active:scale-95"
+                            className={`min-w-6 h-6 px-1.5 text-[10px] font-black rounded-md transition-all flex items-center justify-center hover:scale-105 active:scale-95 ${
+                              fitProfile?.recommendedSize === sz
+                                ? 'bg-emerald-600 text-white border border-emerald-700'
+                                : 'bg-[#FAF7F2] hover:bg-purple-600 hover:text-white text-slate-800 border border-[#DDD8CD]'
+                            }`}
                             title={`Kup rozmiar ${sz}`}
                           >
                             {sz}
@@ -278,7 +305,6 @@ export const HomePage: React.FC<HomePageProps> = () => {
                     )}
                   </div>
 
-                  {/* Info & Rating */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-1 text-yellow-500 text-xs font-bold">
@@ -288,7 +314,6 @@ export const HomePage: React.FC<HomePageProps> = () => {
                         <span className="text-slate-400 text-[10px] font-normal ml-1">(5.0)</span>
                       </div>
 
-                      {/* Color Swatch Dots */}
                       <div className="flex items-center space-x-1.5" title={`Kolory: ${product.colors.join(', ')}`}>
                         {product.colors.slice(0, 3).map((col) => (
                           <span
@@ -317,7 +342,6 @@ export const HomePage: React.FC<HomePageProps> = () => {
                     </div>
                   </div>
 
-                  {/* Primary Action Button */}
                   <div className="pt-3.5">
                     <button
                       onClick={(e) => handleQuickAdd(e, product)}
@@ -333,7 +357,6 @@ export const HomePage: React.FC<HomePageProps> = () => {
           </div>
         )}
 
-        {/* Bottom CTA to full products page */}
         <div className="text-center pt-4">
           <Link
             to="/products"
@@ -345,11 +368,15 @@ export const HomePage: React.FC<HomePageProps> = () => {
         </div>
       </section>
 
-      {/* 3D PREVIEW MODAL */}
       <Model3DModal
         product={modal3DProduct}
         isOpen={!!modal3DProduct}
         onClose={() => setModal3DProduct(null)}
+      />
+
+      <FitFinderModal
+        isOpen={isFitFinderOpen}
+        onClose={() => setIsFitFinderOpen(false)}
       />
     </div>
   );
