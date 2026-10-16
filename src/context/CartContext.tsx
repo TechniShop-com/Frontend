@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { CartItem, Product } from '../types';
-import { getCart, addToCartApi, removeCartItemApi, clearCartApi } from '../services/api';
+import { getCart, addToCartApi, updateCartItemApi, removeCartItemApi, clearCartApi } from '../services/api';
+import { useAuth } from './AuthContext';
 
 interface CartContextType {
   cart: CartItem[];
@@ -19,6 +20,7 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated } = useAuth();
   const [cart, setCart] = useState<CartItem[]>(() => {
     try {
       const saved = localStorage.getItem('technishop_cart');
@@ -33,9 +35,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const openCartDrawer = () => setIsCartDrawerOpen(true);
   const closeCartDrawer = () => setIsCartDrawerOpen(false);
 
-  // Synchronizacja z backendem przy starcie
+  // Synchronizacja z Supabase po zalogowaniu.
   useEffect(() => {
     const syncCart = async () => {
+      if (!isAuthenticated) return;
       try {
         setIsLoading(true);
         const data = await getCart();
@@ -49,7 +52,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
     syncCart();
-  }, []);
+  }, [isAuthenticated]);
 
   // Zapis do localStorage przy każdej zmianie
   useEffect(() => {
@@ -73,15 +76,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Automatycznie otwieramy boczny drawer koszyka dla płynnego UX
     setIsCartDrawerOpen(true);
 
-    // Wysłanie zapytania do backendu
+    // Zapis koszyka przypisanego do zalogowanego użytkownika.
     try {
-      await addToCartApi(product.id, color, size, quantity);
+      if (isAuthenticated) await addToCartApi(product.id, color, size, quantity);
     } catch (err) {
       console.warn('Nie udało się zapisać do bazy backendu (działa w trybie lokalnym):', err);
     }
   };
 
   const updateQuantity = async (indexOrId: number, delta: number) => {
+    const current = cart[indexOrId] || cart.find((item) => item.id === indexOrId);
+    const nextQuantity = current ? current.quantity + delta : 0;
     setCart((prev) => {
       return prev
         .map((item, idx) => {
@@ -93,6 +98,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         })
         .filter((item): item is CartItem => item !== null);
     });
+    if (current?.id && isAuthenticated) {
+      try { await updateCartItemApi(current.id, nextQuantity); } catch (err) { console.warn('Błąd aktualizacji koszyka:', err); }
+    }
   };
 
   const removeFromCart = async (indexOrId: number) => {
@@ -100,7 +108,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setCart((prev) => prev.filter((item, i) => i !== indexOrId && item.id !== indexOrId));
 
-    if (itemToRemove && itemToRemove.id) {
+    if (itemToRemove && itemToRemove.id && isAuthenticated) {
       try {
         await removeCartItemApi(itemToRemove.id);
       } catch (err) {
@@ -112,7 +120,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const clearCart = async () => {
     setCart([]);
     try {
-      await clearCartApi();
+      if (isAuthenticated) await clearCartApi();
     } catch (err) {
       console.warn('Błąd czyszczenia koszyka w backendzie:', err);
     }
