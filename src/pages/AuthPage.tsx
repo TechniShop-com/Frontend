@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Mail, Lock, User as UserIcon, ArrowRight, ShieldCheck, Truck, Eye, EyeOff, X } from 'lucide-react';
@@ -25,11 +25,11 @@ export const AuthPage: React.FC = () => {
   const [customGoogleName, setCustomGoogleName] = useState('');
   const [showCustomGoogleInput, setShowCustomGoogleInput] = useState(false);
 
-  // If already logged in, redirect home
-  if (user) {
-    navigate('/');
-    return null;
-  }
+  useEffect(() => {
+    if (user) navigate('/', { replace: true });
+  }, [navigate, user]);
+
+  if (user) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,51 +80,10 @@ export const AuthPage: React.FC = () => {
 
   const handleGoogleSignIn = async () => {
     setErrorMessage(null);
-    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-
-    // Jeśli skonfigurowano Google Client ID i załadowano bibliotekę Google
-    if (googleClientId && (window as any).google?.accounts?.oauth2) {
-      try {
-        setIsGoogleLoading(true);
-        const tokenClient = (window as any).google.accounts.oauth2.initTokenClient({
-          client_id: googleClientId,
-          scope: 'openid email profile',
-          callback: async (tokenResponse: any) => {
-            if (tokenResponse && tokenResponse.access_token) {
-              try {
-                const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                  headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-                });
-                const googleProfile = await userInfoRes.json();
-                
-                const fullName = googleProfile.name || `${googleProfile.given_name || ''} ${googleProfile.family_name || ''}`.trim() || 'Użytkownik Google';
-                const userEmail = googleProfile.email;
-                const avatar = googleProfile.picture;
-
-                await handleExecuteGoogleLogin({
-                  email: userEmail,
-                  name: fullName,
-                  avatarUrl: avatar,
-                });
-              } catch (err) {
-                console.error('Błąd pobierania profilu z Google:', err);
-                setErrorMessage('Nie udało się pobrać danych profilu z konta Google');
-                setIsGoogleLoading(false);
-              }
-            } else {
-              setIsGoogleLoading(false);
-            }
-          },
-        });
-        tokenClient.requestAccessToken();
-        return;
-      } catch (err) {
-        console.error('Błąd wywołania Google OAuth:', err);
-      }
-    }
-
-    // Bezpośrednie eleganckie okno wyboru/logowania Google (działa od ręki również bez wstępnej konfiguracji GCP)
-    setIsGoogleModalOpen(true);
+    setIsGoogleLoading(true);
+    const result = await loginWithGoogle({ email: '', name: '' });
+    if (!result.success) setErrorMessage(result.message || 'Nie udało się uruchomić logowania Google');
+    setIsGoogleLoading(false);
   };
 
   return (
