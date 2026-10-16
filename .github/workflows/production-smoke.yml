@@ -2,7 +2,11 @@ name: Production smoke tests
 
 on:
   push:
+    branches: [main]
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   smoke:
@@ -20,3 +24,5 @@ jobs:
         env:
           TECHNISHOP_URL: https://technishop-frontend.vercel.app
         run: python tests/production_smoke.py
+      - name: Promote tested commit to prod
+        run: git push origin HEAD:prod
