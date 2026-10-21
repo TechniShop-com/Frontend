@@ -18,6 +18,7 @@ import {
   Settings,
 } from 'lucide-react';
 import { Logo } from './Logo';
+import { SearchModal } from './SearchModal';
 
 interface NavbarProps {
   activeBrand?: string;
@@ -30,13 +31,25 @@ export const Navbar: React.FC<NavbarProps> = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [navSearch, setNavSearch] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const dropdownTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
+
+  // Globalny skrót klawiszowy: Ctrl+K / Cmd+K otwiera wyszukiwarkę z dowolnego miejsca
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsSearchOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const activeCategory = searchParams.get('category') || 'all';
   const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -92,12 +105,6 @@ export const Navbar: React.FC<NavbarProps> = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (navSearch.trim()) {
-      navigate(`/products?search=${encodeURIComponent(navSearch)}`);
-    }
-  };
 
   const handleCategorySelect = (category: string) => {
     if (dropdownTimeoutRef.current) {
@@ -338,19 +345,28 @@ export const Navbar: React.FC<NavbarProps> = () => {
 
         {/* Right Search Input, Cart Trigger & User Auth Avatar */}
         <div className="flex items-center space-x-3.5 sm:space-x-5 lg:space-x-6">
-          {/* Modern Sleek Search */}
-          <div className="relative hidden sm:block w-44 lg:w-60 group">
-            <form onSubmit={handleSearchSubmit}>
-              <Search className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-purple-600 transition-colors pointer-events-none" />
-              <input
-                type="text"
-                placeholder="Szukaj produktów..."
-                value={navSearch}
-                onChange={(e) => setNavSearch(e.target.value)}
-                className="w-full pl-9 pr-8 py-2 text-xs bg-[#E4DFD5] hover:bg-[#DDD8CD] focus:bg-white text-slate-800 placeholder:text-slate-500 font-medium rounded-full border border-[#DDD8CD] focus:border-purple-500 focus:outline-none focus:ring-4 focus:ring-purple-500/10 shadow-xs transition-all duration-200"
-              />
-            </form>
-          </div>
+          {/* Modern Sleek Live Search Trigger */}
+          <button
+            type="button"
+            onClick={() => setIsSearchOpen(true)}
+            className="relative hidden sm:flex items-center justify-between w-48 lg:w-64 pl-9 pr-2.5 py-2 text-xs bg-[#E4DFD5] hover:bg-white text-slate-500 hover:text-slate-800 font-medium rounded-full border border-[#DDD8CD] hover:border-purple-400 focus:outline-none shadow-2xs hover:shadow-xs transition-all duration-200 cursor-pointer group text-left"
+          >
+            <Search className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 group-hover:text-purple-600 transition-colors pointer-events-none" />
+            <span className="truncate">Szukaj produktów...</span>
+            <kbd className="hidden lg:inline-flex items-center gap-0.5 px-2 py-0.5 text-[10px] font-extrabold text-slate-500 bg-white/80 group-hover:bg-purple-100 group-hover:text-purple-700 rounded-md border border-[#DDD8CD] transition-colors shadow-2xs">
+              Ctrl K
+            </kbd>
+          </button>
+
+          {/* Mobile Search Button */}
+          <button
+            type="button"
+            onClick={() => setIsSearchOpen(true)}
+            className="sm:hidden flex items-center justify-center w-9 h-9 rounded-full bg-[#E4DFD5] hover:bg-[#DDD8CD] text-slate-700 hover:text-purple-600 border border-[#DDD8CD] shadow-xs transition-all duration-200 cursor-pointer"
+            title="Szukaj produktów"
+          >
+            <Search className="w-4 h-4" />
+          </button>
 
           {/* Cart Button */}
           <button
@@ -434,6 +450,9 @@ export const Navbar: React.FC<NavbarProps> = () => {
           )}
         </div>
       </div>
+
+      {/* Instant Live Search Modal */}
+      <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </header>
   );
 };
