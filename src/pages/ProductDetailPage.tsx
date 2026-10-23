@@ -4,6 +4,8 @@ import { MOCK_PRODUCTS } from '../mockData';
 import { Product } from '../types';
 import { getProductById } from '../services/api';
 import { useCart } from '../context/CartContext';
+import { Product3DViewer } from '../components/Product3DViewer';
+import { FitFinderModal, loadSavedFitProfile, FitProfile } from '../components/FitFinderModal';
 import { ProductReviewsSection } from '../components/ProductReviewsSection';
 import {
   Check,
@@ -15,6 +17,10 @@ import {
   ChevronRight,
   Ruler,
   Clock,
+  Box,
+  Sparkles,
+  Image as ImageIcon,
+  UserCheck,
   MessageSquare,
 } from 'lucide-react';
 
@@ -33,6 +39,16 @@ export const ProductDetailPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'opis' | 'parametry' | 'rozmiary' | 'dostawa' | 'opinie'>('opis');
   const [addedNotice, setAddedNotice] = useState(false);
 
+  const [mediaMode, setMediaMode] = useState<'2d' | '3d'>('3d');
+  const [isFitFinderOpen, setIsFitFinderOpen] = useState(false);
+  const [fitProfile, setFitProfile] = useState<FitProfile | null>(() => loadSavedFitProfile());
+
+  useEffect(() => {
+    const syncProfile = () => setFitProfile(loadSavedFitProfile());
+    window.addEventListener('fitProfileUpdated', syncProfile);
+    return () => window.removeEventListener('fitProfileUpdated', syncProfile);
+  }, []);
+
   useEffect(() => {
     if (!id) return;
     const fetchProduct = async () => {
@@ -41,7 +57,12 @@ export const ProductDetailPage: React.FC = () => {
         if (data) {
           setProduct(data);
           setSelectedColor(data.colors[0] || 'Domyślny');
-          setSelectedSize(data.sizes[0] || 'M');
+          const saved = loadSavedFitProfile();
+          if (saved && data.sizes.includes(saved.recommendedSize)) {
+            setSelectedSize(saved.recommendedSize);
+          } else {
+            setSelectedSize(data.sizes[0] || 'M');
+          }
         }
       } catch (err) {
         console.warn('Backend niedostępny, używam produktu mock:', err);
@@ -95,22 +116,60 @@ export const ProductDetailPage: React.FC = () => {
         <span className="text-slate-900 font-bold truncate max-w-xs">{product.title}</span>
       </nav>
 
-      {/* TOP SECTION: ALLEGRO-STYLE (Left: Large Photo Gallery, Right: Purchase Box) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* LEFT: Large Photo & Highlights (5 cols on lg) */}
         <div className="lg:col-span-6 space-y-4">
-          <div className="bg-white rounded-3xl border border-[#EBE6DD] p-4 sm:p-8 shadow-xs relative overflow-hidden group">
-            <span className="absolute top-4 left-4 z-20 px-3 py-1 bg-purple-600 text-white font-bold text-[10px] uppercase tracking-wider rounded-full shadow-sm">
-              {product.gender === 'WOMEN' ? 'Damskie' : product.gender === 'MEN' ? 'Męskie' : 'Unisex'}
-            </span>
+          <div className="bg-white rounded-3xl border border-[#EBE6DD] p-4 sm:p-6 shadow-xs relative overflow-hidden space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-[#EBE6DD]">
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setMediaMode('3d')}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center space-x-1.5 cursor-pointer ${
+                    mediaMode === '3d'
+                      ? 'bg-purple-600 text-white shadow-xs ring-2 ring-purple-300'
+                      : 'bg-[#FAF7F2] text-slate-700 hover:bg-purple-50 hover:text-purple-700'
+                  }`}
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-yellow-300 animate-pulse" />
+                  <span>Model 3D 360°</span>
+                </button>
 
-            <div className="aspect-square w-full rounded-2xl overflow-hidden bg-[#FAF7F2] flex items-center justify-center">
-              <img
-                src={product.imageUrl}
-                alt={product.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-              />
+                <button
+                  onClick={() => setMediaMode('2d')}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center space-x-1.5 cursor-pointer ${
+                    mediaMode === '2d'
+                      ? 'bg-purple-600 text-white shadow-xs'
+                      : 'bg-[#FAF7F2] text-slate-700 hover:bg-purple-50 hover:text-purple-700'
+                  }`}
+                >
+                  <ImageIcon className="w-3.5 h-3.5" />
+                  <span>Zdjęcie 2D</span>
+                </button>
+              </div>
+
+              <span className="px-2.5 py-1 bg-purple-100 text-purple-800 font-bold text-[10px] uppercase tracking-wider rounded-full">
+                {product.gender === 'WOMEN' ? 'Damskie' : product.gender === 'MEN' ? 'Męskie' : 'Unisex'}
+              </span>
             </div>
+
+            {mediaMode === '3d' ? (
+              <div className="w-full h-[450px] sm:h-[480px] rounded-2xl overflow-hidden relative">
+                <Product3DViewer
+                  selectedColor={selectedColor}
+                  onColorChange={setSelectedColor}
+                  availableColors={product.colors}
+                  height="h-full"
+                  autoRotateDefault={true}
+                />
+              </div>
+            ) : (
+              <div className="aspect-square w-full rounded-2xl overflow-hidden bg-[#FAF7F2] flex items-center justify-center relative group">
+                <img
+                  src={product.imageUrl}
+                  alt={product.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                />
+              </div>
+            )}
           </div>
 
           {/* Guarantee Badges below image */}
@@ -214,38 +273,75 @@ export const ProductDetailPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Size Selector */}
-          <div className="space-y-2.5 pt-2">
-            <div className="flex items-center justify-between">
+          <div className="space-y-3 pt-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <label className="text-xs font-bold text-slate-800 uppercase tracking-wider">
                 Rozmiar: <span className="text-purple-700 font-semibold normal-case">{selectedSize}</span>
               </label>
-              <button
-                onClick={() => {
-                  setActiveTab('rozmiary');
-                  const elem = document.getElementById('details-section');
-                  elem?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="text-[11px] font-bold text-purple-600 hover:underline flex items-center space-x-1"
-              >
-                <Ruler className="w-3.5 h-3.5" />
-                <span>Tabela rozmiarów</span>
-              </button>
+              <div className="flex items-center space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setIsFitFinderOpen(true)}
+                  className="px-3 py-1 rounded-full text-[11px] font-black bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 shadow-xs flex items-center space-x-1.5 transition-all cursor-pointer"
+                >
+                  <Sparkles className="w-3 h-3 text-yellow-300" />
+                  <span>Asystent Rozmiaru AI</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab('rozmiary');
+                    const elem = document.getElementById('details-section');
+                    elem?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="text-[11px] font-bold text-purple-600 hover:underline flex items-center space-x-1"
+                >
+                  <Ruler className="w-3.5 h-3.5" />
+                  <span>Tabela rozmiarów</span>
+                </button>
+              </div>
             </div>
+
+            {fitProfile && product.sizes.includes(fitProfile.recommendedSize) && (
+              <div className="flex items-center justify-between bg-emerald-50/90 border border-emerald-200 px-3.5 py-2 rounded-xl text-xs">
+                <div className="flex items-center space-x-2 text-emerald-900 font-bold">
+                  <UserCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>
+                    Twój rozmiar FitFinder AI: <strong>{fitProfile.recommendedSize}</strong> ({fitProfile.confidence}% dopasowania dla {fitProfile.height}cm / {fitProfile.weight}kg)
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsFitFinderOpen(true)}
+                  className="text-[11px] font-black text-emerald-700 hover:underline ml-2 shrink-0 cursor-pointer"
+                >
+                  Zmień
+                </button>
+              </div>
+            )}
+
             <div className="flex flex-wrap gap-2.5">
               {product.sizes.map((size) => {
                 const isSelected = selectedSize === size;
+                const isRecommended = fitProfile?.recommendedSize === size;
                 return (
                   <button
                     key={size}
                     onClick={() => setSelectedSize(size)}
-                    className={`min-w-11 px-3.5 py-2 rounded-xl text-xs font-medium border transition-all text-center ${
+                    className={`relative min-w-11 px-3.5 py-2 rounded-xl text-xs font-medium border transition-all text-center cursor-pointer ${
                       isSelected
                         ? 'border-purple-600 bg-purple-600 text-white font-bold shadow-xs'
+                        : isRecommended
+                        ? 'border-emerald-500 bg-emerald-50/60 text-emerald-900 font-bold hover:bg-emerald-100'
                         : 'border-[#DDD8CD] bg-[#FAF7F2] text-slate-700 hover:border-purple-300 hover:bg-white'
                     }`}
                   >
                     {size}
+                    {isRecommended && (
+                      <span className=" -top-2 -right-1.5 px-1.5 py-0.2 bg-emerald-500 text-white text-[8px] font-black rounded-full uppercase shadow-2xs ml-1.5">
+                        AI
+                      </span>
+                    )}
                   </button>
                 );
               })}
@@ -544,6 +640,14 @@ export const ProductDetailPage: React.FC = () => {
           <span>DODAJ DO KOSZYKA</span>
         </button>
       </div>
+
+      <FitFinderModal
+        isOpen={isFitFinderOpen}
+        onClose={() => setIsFitFinderOpen(false)}
+        productTitle={product.title}
+        availableSizes={product.sizes}
+        onSelectSize={(size) => setSelectedSize(size)}
+      />
     </div>
   );
 };
