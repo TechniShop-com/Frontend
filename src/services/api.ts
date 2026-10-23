@@ -33,7 +33,7 @@ export const getCart = async () => {
   const { data, error } = await supabase.from('cart_items').select('*, product:Product(*)').eq('user_id', user_id).order('createdAt');
   if (error) throw error;
   const items = (data || []).map(formatCart);
-  return { items, totalPrice: items.reduce((sum, item) => sum + item.product.price * item.quantity, 0), totalItems: items.reduce((sum, item) => sum + item.quantity, 0) };
+  return { items, totalPrice: items.reduce((sum: number, item: any) => sum + item.product.price * item.quantity, 0), totalItems: items.reduce((sum: number, item: any) => sum + item.quantity, 0) };
 };
 
 export const addToCartApi = async (productId: string, selectedColor: string, selectedSize: string, quantity = 1) => {

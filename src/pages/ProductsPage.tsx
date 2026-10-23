@@ -4,7 +4,8 @@ import { MOCK_PRODUCTS } from '../mockData';
 import { Product } from '../types';
 import { getProducts } from '../services/api';
 import { useCart } from '../context/CartContext';
-import { ShoppingBag, Star, Zap, Check, Loader2, Heart, Sparkles } from 'lucide-react';
+import { ShoppingBag, Star, Zap, Check, Loader2, Heart, Sparkles, Eye } from 'lucide-react';
+import { QuickViewModal } from '../components/QuickViewModal';
 
 const getColorHex = (colorName: string): string => {
   const c = colorName.toLowerCase();
@@ -26,6 +27,7 @@ export const ProductsPage: React.FC = () => {
   const [sortBy, setSortBy] = useState<'default' | 'price-asc' | 'price-desc'>('default');
   const [quickNotice, setQuickNotice] = useState<string | null>(null);
   const [wishlist, setWishlist] = useState<string[]>([]);
+  const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
 
   const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
   const [loading, setLoading] = useState(true);
@@ -105,6 +107,11 @@ export const ProductsPage: React.FC = () => {
     setTimeout(() => setQuickNotice(null), 2500);
   };
 
+  const handleOpenQuickView = (e: React.MouseEvent, product: Product) => {
+    e.stopPropagation();
+    setQuickViewProduct(product);
+  };
+
   const toggleWishlist = (e: React.MouseEvent, productId: string) => {
     e.stopPropagation();
     setWishlist((prev) =>
@@ -181,6 +188,26 @@ export const ProductsPage: React.FC = () => {
                   >
                     <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-current text-rose-500' : ''}`} />
                   </button>
+
+                  {/* Quick View Button (Top Right under Heart) */}
+                  <button
+                    onClick={(e) => handleOpenQuickView(e, product)}
+                    className="absolute top-[46px] right-2.5 z-20 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-slate-600 hover:text-purple-600 flex items-center justify-center transition-all duration-200 shadow-xs hover:scale-110 cursor-pointer"
+                    title="Szybki podgląd"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </button>
+
+                  {/* Quick View Center Button on Hover (Zalando style) */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-20">
+                    <button
+                      onClick={(e) => handleOpenQuickView(e, product)}
+                      className="pointer-events-auto px-4 py-2 rounded-full bg-white/95 backdrop-blur-md hover:bg-purple-600 text-slate-800 hover:text-white font-black text-[11px] shadow-xl hover:shadow-purple-950/20 flex items-center space-x-1.5 transition-all transform translate-y-2 group-hover:translate-y-0 cursor-pointer"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>SZYBKI PODGLĄD</span>
+                    </button>
+                  </div>
 
                   {/* Brand Tag Bottom Right */}
                   <span className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-[#FAF7F2]/95 text-purple-900 shadow-xs border border-[#E2DDD3] z-10">
@@ -264,6 +291,13 @@ export const ProductsPage: React.FC = () => {
           })}
         </div>
       )}
+
+      {/* Quick View Modal */}
+      <QuickViewModal
+        product={quickViewProduct}
+        isOpen={!!quickViewProduct}
+        onClose={() => setQuickViewProduct(null)}
+      />
     </div>
   );
 };

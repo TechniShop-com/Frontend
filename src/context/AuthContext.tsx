@@ -44,8 +44,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    supabase.auth.getSession().then(({ data }) => loadProfile(data.session?.user || null));
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    supabase.auth.getSession().then(({ data }: any) => loadProfile(data.session?.user || null));
+    const { data: listener } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
       void loadProfile(session?.user || null);
     });
     return () => listener.subscription.unsubscribe();
