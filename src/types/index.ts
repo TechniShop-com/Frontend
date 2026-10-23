@@ -38,4 +38,30 @@ export interface DiscountCoupon {
   minOrderValue?: number;
 }
 
+export interface ProductReview {
+  id: string;
+  productId: string;
+  authorName: string;
+  rating: number; // 1-5
+  comment: string;
+  date: string;
+  verifiedPurchase: boolean;
+  helpfulCount: number;
+  isStudent?: boolean;
+}
+
+export interface ReviewStats {
+  averageRating: number;
+  totalReviews: number;
+  recommendationPercentage: number;
+  ratingDistribution: {
+    5: number;
+    4: number;
+    3: number;
+    2: number;
+    1: number;
+  };
+}
+
+
 

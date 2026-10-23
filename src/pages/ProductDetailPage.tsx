@@ -6,6 +6,7 @@ import { getProductById } from '../services/api';
 import { useCart } from '../context/CartContext';
 import { Product3DViewer } from '../components/Product3DViewer';
 import { FitFinderModal, loadSavedFitProfile, FitProfile } from '../components/FitFinderModal';
+import { ProductReviewsSection } from '../components/ProductReviewsSection';
 import {
   Check,
   ShoppingBag,
@@ -19,8 +20,10 @@ import {
   Box,
   Sparkles,
   Image as ImageIcon,
-  UserCheck
+  UserCheck,
+  MessageSquare,
 } from 'lucide-react';
+
 
 export const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -197,15 +200,27 @@ export const ProductDetailPage: React.FC = () => {
               <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200">
                 <span>{product.brand === 'TECHNI_ZDALNI' ? 'Techni Zdalni' : 'Techni Schools'}</span>
               </span>
-              <div className="flex items-center space-x-1 text-xs">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('opinie');
+                  const elem = document.getElementById('details-section');
+                  elem?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="flex items-center space-x-1 text-xs group cursor-pointer hover:opacity-85 transition-opacity"
+                title="Przejdź do opinii i recenzji"
+              >
                 <div className="flex text-yellow-400">
                   {[1, 2, 3, 4, 5].map((s) => (
                     <Star key={s} className="w-3.5 h-3.5 fill-current" />
                   ))}
                 </div>
-                <span className="font-extrabold text-slate-800 ml-1">5.0</span>
-                <span className="text-slate-400 font-medium">(428 ocen)</span>
-              </div>
+                <span className="font-extrabold text-slate-800 ml-1">4.9</span>
+                <span className="text-purple-600 font-bold group-hover:underline">
+                  (Opinie kupujących)
+                </span>
+              </button>
+
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-tight">
@@ -456,14 +471,18 @@ export const ProductDetailPage: React.FC = () => {
           </button>
           <button
             onClick={() => setActiveTab('opinie')}
-            className={`px-6 py-4 text-xs transition-all shrink-0 ${
+            className={`px-6 py-4 text-xs transition-all shrink-0 flex items-center space-x-1.5 ${
               activeTab === 'opinie'
                 ? 'border-b-2 border-purple-600 text-purple-700 bg-white font-bold'
                 : 'border-b-2 border-transparent text-slate-600 hover:text-purple-600 font-medium'
             }`}
           >
-            Opinie Kupujących (428)
+            <span>Opinie & Recenzje</span>
+            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black bg-purple-100 text-purple-700">
+              Społeczność
+            </span>
           </button>
+
         </div>
 
         {/* Tab Content */}
@@ -591,60 +610,16 @@ export const ProductDetailPage: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 4: OPINIE KUPUJĄCYCH */}
+          {/* TAB 4: OPINIE KUPUJĄCYCH (INTERACTIVE REVIEWS & RATINGS ENGINE) */}
           {activeTab === 'opinie' && (
-            <div className="space-y-6 max-w-4xl">
-              <div className="flex items-center space-x-4 bg-[#FAF7F2] p-6 rounded-2xl border border-[#EBE6DD]">
-                <div className="text-center">
-                  <div className="text-4xl font-black text-slate-900">5.0</div>
-                  <div className="flex text-yellow-400 mt-1">
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <Star key={s} className="w-3.5 h-3.5 fill-current" />
-                    ))}
-                  </div>
-                </div>
-                <div className="border-l border-[#E2DDD3] pl-4 space-y-1 text-xs">
-                  <div className="font-bold text-slate-900">100% kupujących poleca ten produkt</div>
-                  <div className="text-slate-500 font-medium">Na podstawie 428 zweryfikowanych zamówień uczniów i nauczycieli.</div>
-                </div>
-              </div>
-
-              {/* Sample Reviews */}
-              <div className="space-y-4">
-                <div className="bg-[#FAF7F2] p-4 rounded-2xl border border-[#EBE6DD] space-y-1.5 text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-900">Kacper M. (Uczeń Techni)</span>
-                    <span className="text-[10px] text-slate-400">2 dni temu • Zweryfikowany zakup</span>
-                  </div>
-                  <div className="flex text-yellow-400">
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <Star key={s} className="w-3 h-3 fill-current" />
-                    ))}
-                  </div>
-                  <p className="text-slate-600 font-medium">
-                    Jakość materiału jest rewelacyjna. Bardzo wygodna, krój idealnie leży i świetnie wygląda w szkole.
-                  </p>
-                </div>
-
-                <div className="bg-[#FAF7F2] p-4 rounded-2xl border border-[#EBE6DD] space-y-1.5 text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-900">Weronika K.</span>
-                    <span className="text-[10px] text-slate-400">w zeszłym tygodniu • Zweryfikowany zakup</span>
-                  </div>
-                  <div className="flex text-yellow-400">
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <Star key={s} className="w-3 h-3 fill-current" />
-                    ))}
-                  </div>
-                  <p className="text-slate-600 font-medium">
-                    Szybka dostawa i genialny fioletowy kolor! Wszystko zgodnie z tabelą rozmiarów.
-                  </p>
-                </div>
-              </div>
-            </div>
+            <ProductReviewsSection
+              productId={product.id}
+              productTitle={product.title}
+            />
           )}
         </div>
       </div>
+
 
       {/* Sticky Mobile Add To Cart Bar (Reserved / Zara / Zalando mobile standard) */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#FAF8F5]/95 backdrop-blur-md border-t border-[#E3DDD2] p-3 z-40 flex items-center justify-between shadow-2xl">

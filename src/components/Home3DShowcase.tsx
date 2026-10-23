@@ -7,10 +7,10 @@ import { useCart } from '../context/CartContext';
 
 export const Home3DShowcase: React.FC = () => {
   const { addToCart } = useCart();
-  const [selectedColor, setSelectedColor] = useState('Fioletowa');
+  const [selectedColor, setSelectedColor] = useState('Biała');
   const [addedNotice, setAddedNotice] = useState(false);
 
-  const featuredProduct = MOCK_PRODUCTS[0];
+  const featuredProduct = MOCK_PRODUCTS[4] || MOCK_PRODUCTS[0];
 
   const handleAddToCart = () => {
     addToCart(featuredProduct, selectedColor, 'M');
@@ -27,15 +27,15 @@ export const Home3DShowcase: React.FC = () => {
         <div className="lg:col-span-5 space-y-6">
           <div className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-200 text-xs font-black uppercase tracking-wider backdrop-blur-md">
             <Sparkles className="w-4 h-4 text-yellow-300" />
-            <span>Wirtualne Studio Techni 3D</span>
+            <span>Oficjalna Koszulka Techni Zdalni 3D</span>
           </div>
 
           <div className="space-y-3">
             <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white leading-tight">
-              Odkryj Odzież Techni w Interaktywnym 3D
+              Zobacz Koszulkę Techni Zdalni w 360°
             </h2>
             <p className="text-sm text-purple-200/90 font-medium leading-relaxed">
-              Obracaj model w 360°, zmieniaj kolory na żywo, przybliżaj detale haftu i sprawdź gramaturę bawełny bez wychodzenia z domu.
+              Sprawdź oryginalny nadruk Techni Zdalni na piersi oraz autorską grafikę 3D School that makes a difference na plecach.
             </p>
           </div>
 
@@ -45,8 +45,8 @@ export const Home3DShowcase: React.FC = () => {
                 <RotateCw className="w-4 h-4" />
               </div>
               <div>
-                <span className="font-bold text-white block">Pełna Rotacja 360° & Zoom</span>
-                <span className="text-purple-200/70 text-[11px]">Dowolny kąt widzenia i zliczanie ściegów haftu</span>
+                <span className="font-bold text-white block">Widok Przód i Tył (360°)</span>
+                <span className="text-purple-200/70 text-[11px]">Przełączaj kamerę między logotypem na piersi a grafiką na plecach</span>
               </div>
             </div>
 
@@ -55,15 +55,15 @@ export const Home3DShowcase: React.FC = () => {
                 <Eye className="w-4 h-4" />
               </div>
               <div>
-                <span className="font-bold text-white block">Dynamiczny Podgląd Kolorów</span>
-                <span className="text-purple-200/70 text-[11px]">Królewski Fiolet, Głęboka Czerń, Klasyczny Szary</span>
+                <span className="font-bold text-white block">Dynamiczna Zmiana Koloru Dzianiny</span>
+                <span className="text-purple-200/70 text-[11px]">Biały oryginał, Królewski Fiolet, Głęboka Czerń i Szary</span>
               </div>
             </div>
           </div>
 
           <div className="bg-white/10 border border-white/15 p-4 rounded-2xl space-y-3 backdrop-blur-md">
             <div className="flex items-center justify-between text-xs">
-              <span className="font-bold text-purple-200">Wybrany kolor 3D:</span>
+              <span className="font-bold text-purple-200">Wybrany wariant 3D:</span>
               <span className="font-extrabold text-white uppercase">{selectedColor}</span>
             </div>
 
@@ -73,7 +73,7 @@ export const Home3DShowcase: React.FC = () => {
                 className="flex-1 py-3 px-5 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-black text-xs rounded-xl shadow-lg flex items-center justify-center space-x-2 transition-all cursor-pointer hover:scale-[1.02]"
               >
                 <ShoppingBag className="w-4 h-4 text-yellow-300" />
-                <span>KUP MODEL 3D ({featuredProduct.price.toFixed(2)} zł)</span>
+                <span>KUP KOSZULKĘ 3D ({featuredProduct.price.toFixed(2)} zł)</span>
               </button>
 
               <Link
@@ -88,7 +88,7 @@ export const Home3DShowcase: React.FC = () => {
             {addedNotice && (
               <div className="bg-emerald-500/90 text-white p-2 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 anim-wiggle">
                 <Check className="w-4 h-4" />
-                <span>Dodano bluze z podglądu 3D do koszyka!</span>
+                <span>Dodano koszulkę Techni z podglądu 3D do koszyka!</span>
               </div>
             )}
           </div>
@@ -98,7 +98,7 @@ export const Home3DShowcase: React.FC = () => {
           <Product3DViewer
             selectedColor={selectedColor}
             onColorChange={setSelectedColor}
-            availableColors={['Fioletowa', 'Czarna', 'Szara', 'Biała']}
+            availableColors={['Biała', 'Fioletowa', 'Czarna', 'Szara']}
             height="h-full"
             autoRotateDefault={true}
           />

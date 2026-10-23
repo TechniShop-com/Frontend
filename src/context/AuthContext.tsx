@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types';
 import { loginUserApi, registerUserApi, updateUserProfileApi, googleAuthApi } from '../services/api';
+import { supabase } from '../lib/supabase';
 
 interface AuthContextType {
   user: User | null;
@@ -29,10 +30,26 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const DEFAULT_AVATAR = 'https://api.dicebear.com/7.x/adventurer/svg?seed=TechniHero&backgroundColor=b6e3f4,c0aede,d1d4f9';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem('techni_user');
-    return saved ? JSON.parse(saved) : null;
-  });
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const loadProfile = async (authUser: { id: string; email?: string; user_metadata?: Record<string, any> } | null) => {
+      if (!authUser) {
+        setUser(null);
+        return;
+      }
+      const { data } = await supabase.from('profiles').select('*').eq('id', authUser.id).maybeSingle();
+      if (data) {
+        setUser({ id: data.id, name: data.name, email: data.email, avatarUrl: data.avatarUrl || undefined });
+      }
+    };
+
+    supabase.auth.getSession().then(({ data }) => loadProfile(data.session?.user || null));
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      void loadProfile(session?.user || null);
+    });
+    return () => listener.subscription.unsubscribe();
+  }, []);
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
@@ -70,7 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const serverMsg = err.response?.data?.error || err.response?.data?.message;
       return {
         success: false,
-        message: serverMsg || 'Błąd połączenia z serwerem. Upewnij się, że backend jest uruchomiony.',
+        message: serverMsg || err.message || 'Nie udało się zalogować. Sprawdź adres email i hasło.',
       };
     }
   };
@@ -85,6 +102,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       const result = await registerUserApi(name, email, password);
+      if ('requiresEmailConfirmation' in result && result.requiresEmailConfirmation) {
+        return { success: true, message: result.message };
+      }
       if (result && result.user) {
         const loggedUser: User = {
           id: result.user.id,
@@ -102,7 +122,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const serverMsg = err.response?.data?.error || err.response?.data?.message;
       return {
         success: false,
-        message: serverMsg || 'Błąd połączenia z serwerem. Upewnij się, że backend jest uruchomiony.',
+        message: serverMsg || err.message || 'Nie udało się utworzyć konta.',
       };
     }
   };
@@ -142,29 +162,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const loginWithGoogle = async (data: {
+  const loginWithGoogle = async (_data: {
     email: string;
     name: string;
     avatarUrl?: string;
   }): Promise<{ success: boolean; message?: string }> => {
-    if (!data.email) {
-      return { success: false, message: 'Brak adresu email z konta Google' };
-    }
-
     try {
-      const result = await googleAuthApi(data);
-      if (result && result.user) {
-        const loggedUser: User = {
-          id: result.user.id,
-          name: result.user.name,
-          email: result.user.email,
-          avatarUrl: result.user.avatarUrl || DEFAULT_AVATAR,
-        };
-        setUser(loggedUser);
-        setIsAuthModalOpen(false);
-        return { success: true, message: result.message };
-      }
-      return { success: false, message: 'Nie udało się zalogować przez Google' };
+      await googleAuthApi();
+      return { success: true, message: 'Przekierowanie do Google' };
     } catch (err: any) {
       console.error('Błąd logowania przez Google w API:', err);
       const serverMsg = err.response?.data?.error || err.response?.data?.message;
@@ -176,6 +181,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
+    void supabase.auth.signOut();
     setUser(null);
   };
 
