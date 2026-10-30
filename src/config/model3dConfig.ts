@@ -9,47 +9,41 @@ export interface Hotspot3D {
 
 export interface Product3DConfig {
   modelUrl: string;
-  productType: 'apparel';
+  productType: 'tshirt';
   label: string;
   defaultColor: string;
   supportedColors: string[];
   hotspots: Hotspot3D[];
 }
 
-export const DEFAULT_APPAREL_HOTSPOTS: Hotspot3D[] = [
+export const OFFICIAL_TSHIRT_HOTSPOTS: Hotspot3D[] = [
   {
     id: 1,
-    position: [0.3, 0.4, 0.25],
-    title: 'Haftowane Logo Techni',
-    desc: 'Precyzyjny haft maszynowy odporny na pranie i ścieranie.',
+    position: [0, 0.24, 0.33],
+    title: 'Logotyp Techni Zdalni (Przód)',
+    desc: 'Centralny nadruk na klatce piersiowej z fioletowym logotypem TECHNI oraz kontrastową typografią ZDALNI.',
   },
   {
     id: 2,
-    position: [-0.35, 0.1, 0.2],
-    title: 'Bawełna Czesana Premium',
-    desc: 'Miękka dzianina o podwyższonej gramaturze zapewniająca trwałość.',
+    position: [0, 0.05, -0.3],
+    title: 'Grafika 3D "School that makes a difference" (Tył)',
+    desc: 'Autorska grafika na plecach z metalicznym splotem 3D oraz sygnaturą Technikum | TECHNI ZDALNI | Liceum.',
   },
   {
     id: 3,
-    position: [0, 0.85, 0.1],
-    title: 'Wzmocniony Kołnierz',
-    desc: 'Elastyczny ściągacz z dodatkiem elastanu utrzymujący kształt.',
+    position: [0, 0.66, 0.16],
+    title: 'Wzmocniony Kołnierz Ribana',
+    desc: 'Elastyczny ściągacz o gęstym splocie Ribana utrzymujący właściwy kształt wokół szyi.',
   },
   {
     id: 4,
-    position: [0.6, -0.1, 0.0],
-    title: 'Podwójne Szwy',
-    desc: 'Wzmocnione przeszycia na rękawach i u dołu odzieży.',
+    position: [0.62, 0.18, 0.05],
+    title: 'Dzianina Knit Cotton Jersey',
+    desc: 'Miękka bawełna czesana o podwyższonej gramaturze z osobnymi warstwami materiału i nadruku.',
   },
 ];
 
-const COMPATIBLE_APPAREL_IDS = new Set([
-  'hoodie-1',
-  'polo-women',
-  'polo-men',
-  'tee-women',
-  'tee-men',
-]);
+const COMPATIBLE_TSHIRT_IDS = new Set(['tee-women', 'tee-men']);
 
 export const getProduct3DConfig = (product?: Product | null): Product3DConfig | null => {
   if (!product) return null;
@@ -57,36 +51,39 @@ export const getProduct3DConfig = (product?: Product | null): Product3DConfig | 
   const normalizedId = product.id.toLowerCase();
   const normalizedTitle = product.title.toLowerCase();
 
-  const isAccessory =
+  const isExcludedCategory =
     normalizedTitle.includes('plecak') ||
     normalizedTitle.includes('butelka') ||
     normalizedTitle.includes('czapka') ||
+    normalizedTitle.includes('bluza') ||
+    normalizedTitle.includes('hoodie') ||
+    normalizedTitle.includes('polo') ||
     normalizedId.includes('backpack') ||
     normalizedId.includes('thermo') ||
-    normalizedId.includes('cap');
+    normalizedId.includes('cap') ||
+    normalizedId.includes('hoodie') ||
+    normalizedId.includes('polo');
 
-  if (isAccessory) {
+  if (isExcludedCategory) {
     return null;
   }
 
-  const isApparel =
-    COMPATIBLE_APPAREL_IDS.has(normalizedId) ||
+  const isCompatibleTShirt =
+    COMPATIBLE_TSHIRT_IDS.has(normalizedId) ||
     normalizedTitle.includes('t-shirt') ||
-    normalizedTitle.includes('koszulka') ||
-    normalizedTitle.includes('bluza');
+    normalizedTitle.includes('koszulka techni');
 
-  if (!isApparel) {
+  if (!isCompatibleTShirt) {
     return null;
   }
 
   return {
     modelUrl: '/model.glb',
-    productType: 'apparel',
-    label: 'Interaktywny Podgląd 3D Odzieży Techni',
-    defaultColor: product.colors[0] || 'Fioletowa',
-    supportedColors:
-      product.colors.length > 0 ? product.colors : ['Fioletowa', 'Czarna', 'Biała', 'Szara'],
-    hotspots: DEFAULT_APPAREL_HOTSPOTS,
+    productType: 'tshirt',
+    label: 'Oficjalny Model 3D Koszulki Techni Zdalni',
+    defaultColor: product.colors[0] || 'Biała',
+    supportedColors: product.colors.length > 0 ? product.colors : ['Biała', 'Fioletowa', 'Czarna', 'Szara'],
+    hotspots: OFFICIAL_TSHIRT_HOTSPOTS,
   };
 };
 
