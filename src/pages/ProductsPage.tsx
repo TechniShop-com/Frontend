@@ -4,7 +4,13 @@ import { MOCK_PRODUCTS } from '../mockData';
 import { Product } from '../types';
 import { getProducts } from '../services/api';
 import { useCart } from '../context/CartContext';
-import { ShoppingBag, Star, Zap, Check, Loader2, Heart, Sparkles } from 'lucide-react';
+import { ShoppingBag, Star, Zap, Check, Loader2, Heart, Sparkles, Ruler, UserCheck } from 'lucide-react';
+import {
+  FitFinderModal,
+  loadSavedFitProfile,
+  supportsFitFinder,
+  FitProfile,
+} from '../components/FitFinderModal';
 
 const getColorHex = (colorName: string): string => {
   const c = colorName.toLowerCase();
@@ -23,12 +29,20 @@ export const ProductsPage: React.FC = () => {
 
   const categoryParam = searchParams.get('category') || 'all';
   const querySearch = searchParams.get('search') || '';
-  const [sortBy, setSortBy] = useState<'default' | 'price-asc' | 'price-desc'>('default');
+  const [sortBy] = useState<'default' | 'price-asc' | 'price-desc'>('default');
   const [quickNotice, setQuickNotice] = useState<string | null>(null);
   const [wishlist, setWishlist] = useState<string[]>([]);
 
   const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
   const [loading, setLoading] = useState(true);
+  const [isFitFinderOpen, setIsFitFinderOpen] = useState(false);
+  const [fitProfile, setFitProfile] = useState<FitProfile | null>(() => loadSavedFitProfile());
+
+  useEffect(() => {
+    const syncProfile = () => setFitProfile(loadSavedFitProfile());
+    window.addEventListener('fitProfileUpdated', syncProfile);
+    return () => window.removeEventListener('fitProfileUpdated', syncProfile);
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -122,6 +136,38 @@ export const ProductsPage: React.FC = () => {
         </div>
       )}
 
+      {categoryParam !== 'akcesoria' && (
+        <div className="bg-gradient-to-r from-[#1E1B4B] via-[#3B0764] to-[#1E1B4B] rounded-3xl p-4 sm:p-5 text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md border border-purple-500/20">
+          <div className="flex items-center space-x-3.5">
+            <div className="w-10 h-10 rounded-2xl bg-purple-500/30 border border-purple-400/40 flex items-center justify-center shrink-0">
+              <Ruler className="w-5 h-5 text-yellow-300" />
+            </div>
+            <div>
+              <div className="text-xs sm:text-sm font-black tracking-tight flex items-center space-x-2">
+                <span>Nie wiesz jaki rozmiar wybrać?</span>
+                {fitProfile && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                    Twój rozmiar FitFinder: {fitProfile.recommendedSize}
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-purple-200/80 font-medium">
+                Podaj wzrost, wagę oraz preferowany krój, a kalkulator FitFinder dobierze odpowiedni rozmiar odzieży.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsFitFinderOpen(true)}
+            className="px-4 py-2.5 rounded-xl bg-white text-purple-950 hover:bg-purple-50 font-black text-xs shrink-0 flex items-center space-x-1.5 shadow-sm transition-all cursor-pointer"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+            <span>{fitProfile ? 'Zmień profil rozmiaru' : 'Uruchom Asystenta Rozmiaru'}</span>
+          </button>
+        </div>
+      )}
+
       {loading && products.length === 0 ? (
         <div className="flex justify-center items-center py-24">
           <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
@@ -167,6 +213,15 @@ export const ProductsPage: React.FC = () => {
                         ? 'Męskie'
                         : 'Unisex'}
                     </span>
+
+                    {fitProfile &&
+                      supportsFitFinder(product) &&
+                      product.sizes.includes(fitProfile.recommendedSize) && (
+                        <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black bg-emerald-600 text-white shadow-xs flex items-center space-x-1">
+                          <UserCheck className="w-2.5 h-2.5" />
+                          <span>Twój rozmiar: {fitProfile.recommendedSize}</span>
+                        </span>
+                      )}
                   </div>
 
                   {/* Wishlist Heart Button */}
@@ -197,7 +252,11 @@ export const ProductsPage: React.FC = () => {
                         <button
                           key={sz}
                           onClick={(e) => handleQuickSizeAdd(e, product, sz)}
-                          className="min-w-6 h-6 px-1.5 text-[10px] font-black rounded-md bg-[#FAF7F2] hover:bg-purple-600 hover:text-white text-slate-800 border border-[#DDD8CD] transition-all flex items-center justify-center hover:scale-105 active:scale-95"
+                          className={`min-w-6 h-6 px-1.5 text-[10px] font-black rounded-md transition-all flex items-center justify-center hover:scale-105 active:scale-95 ${
+                            supportsFitFinder(product) && fitProfile?.recommendedSize === sz
+                              ? 'bg-emerald-600 text-white border border-emerald-700'
+                              : 'bg-[#FAF7F2] hover:bg-purple-600 hover:text-white text-slate-800 border border-[#DDD8CD]'
+                          }`}
                           title={`Kup rozmiar ${sz}`}
                         >
                           {sz}
@@ -264,6 +323,11 @@ export const ProductsPage: React.FC = () => {
           })}
         </div>
       )}
+
+      <FitFinderModal
+        isOpen={isFitFinderOpen}
+        onClose={() => setIsFitFinderOpen(false)}
+      />
     </div>
   );
 };
