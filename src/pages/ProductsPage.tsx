@@ -46,8 +46,15 @@ export const ProductsPage: React.FC = () => {
       }
     };
     loadProducts();
+    const handleUpdate = () => {
+      getProducts().then((data) => {
+        if (data && data.length > 0) setProducts(data);
+      });
+    };
+    window.addEventListener("technishop_products_updated", handleUpdate);
     return () => {
       isMounted = false;
+      window.removeEventListener("technishop_products_updated", handleUpdate);
     };
   }, []);
 
@@ -243,9 +250,19 @@ export const ProductsPage: React.FC = () => {
                     <span className="text-lg font-black text-slate-900">
                       {product.price.toFixed(2)} <span className="text-xs font-bold">zł</span>
                     </span>
-                    <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
-                      Darmowa od 200 zł
-                    </span>
+                    {(product.stock ?? 0) === 0 ? (
+                      <span className="text-[10px] font-black text-red-700 bg-red-50 px-2 py-0.5 rounded-full border border-red-200">
+                        Wyprzedane
+                      </span>
+                    ) : (product.stock ?? 0) <= 10 ? (
+                      <span className="text-[10px] font-black text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                        Ostatnie {product.stock} szt.!
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
+                        Darmowa od 200 zł
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -253,10 +270,15 @@ export const ProductsPage: React.FC = () => {
                 <div className="pt-3.5">
                   <button
                     onClick={(e) => handleQuickAdd(e, product)}
-                    className="w-full py-2.5 px-3 rounded-xl font-black text-xs text-white bg-purple-600 hover:bg-purple-700 active:bg-purple-800 shadow-xs flex items-center justify-center space-x-1.5 transition-colors cursor-pointer"
+                    disabled={(product.stock ?? 0) === 0}
+                    className={`w-full py-2.5 px-3 rounded-xl font-black text-xs flex items-center justify-center space-x-1.5 transition-colors ${
+                      (product.stock ?? 0) === 0
+                        ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                        : "text-white bg-purple-600 hover:bg-purple-700 active:bg-purple-800 shadow-xs cursor-pointer"
+                    }`}
                   >
                     <ShoppingBag className="w-3.5 h-3.5" />
-                    <span>DODAJ DO KOSZYKA</span>
+                    <span>{(product.stock ?? 0) === 0 ? "BRAK W MAGAZYNIE" : "DODAJ DO KOSZYKA"}</span>
                   </button>
                 </div>
               </div>

@@ -11,6 +11,8 @@ export interface Product {
   colors: string[];
   sizes: string[];
   imageUrl: string;
+  stock?: number;
+  featured?: boolean;
 }
 
 export interface CartItem {
@@ -26,6 +28,24 @@ export interface User {
   name: string;
   email: string;
   avatarUrl?: string;
+  role?: 'admin' | 'customer';
+}
+
+export type OrderStatus = 'PENDING' | 'PAID' | 'SHIPPED' | 'COMPLETED' | 'CANCELLED';
+
+export interface Order {
+  id: number | string;
+  customerName: string;
+  email: string;
+  address: string;
+  phone?: string;
+  paymentMethod: string;
+  totalPrice: number;
+  items: CartItem[];
+  status: OrderStatus;
+  createdAt: string;
+  trackingNumber?: string;
+  notes?: string;
 }
 
 export type CouponDiscountType = 'PERCENTAGE' | 'FIXED' | 'FREE_SHIPPING';
@@ -36,6 +56,8 @@ export interface DiscountCoupon {
   value: number; // np. 20 (dla 20%) lub 30 (dla 30 zł)
   description: string;
   minOrderValue?: number;
+  active?: boolean;
+  usageCount?: number;
 }
 
 export interface ProductReview {
@@ -62,6 +84,3 @@ export interface ReviewStats {
     1: number;
   };
 }
-
-
-

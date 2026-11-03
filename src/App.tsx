@@ -12,6 +12,8 @@ import { CartPage } from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { AuthPage } from './pages/AuthPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { AdminPage } from './pages/AdminPage';
+import { ShieldCheck } from 'lucide-react';
 
 // Automatyczne przewijanie na samą górę przy każdej zmianie podstrony
 const ScrollToTop: React.FC = () => {
@@ -28,15 +30,16 @@ const AppLayout: React.FC = () => {
   const location = useLocation();
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
   const isSettingsPage = location.pathname === '/settings' || location.pathname === '/account';
-  const isFullscreen = isAuthPage || isSettingsPage;
+  const isAdminPage = location.pathname === '/admin' || location.pathname === '/panel';
+  const isFullscreen = isAuthPage || isSettingsPage || isAdminPage;
 
   return (
     <div className={`min-h-screen bg-[#FAF7F2] text-slate-900 font-sans flex flex-col ${isFullscreen ? 'h-screen overflow-hidden' : 'justify-between'} selection:bg-purple-600 selection:text-white`}>
       <ScrollToTop />
       <CartDrawer />
       <div className={`flex-1 flex flex-col ${isFullscreen ? 'h-full overflow-hidden' : 'w-full'}`}>
-        {!isSettingsPage && <Navbar />}
-        <main className={`flex-1 flex flex-col ${isSettingsPage ? 'h-full overflow-hidden' : ''}`}>
+        {!isSettingsPage && !isAdminPage && <Navbar />}
+        <main className={`flex-1 flex flex-col ${isFullscreen ? 'h-full overflow-y-auto' : ''}`}>
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/products" element={<ProductsPage />} />
@@ -47,6 +50,8 @@ const AppLayout: React.FC = () => {
             <Route path="/register" element={<AuthPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/account" element={<SettingsPage />} />
+            <Route path="/admin" element={<AdminPage />} />
+            <Route path="/panel" element={<AdminPage />} />
           </Routes>
         </main>
       </div>
@@ -92,4 +97,3 @@ export const App: React.FC = () => {
 };
 
 export default App;
-

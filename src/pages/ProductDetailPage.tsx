@@ -270,25 +270,40 @@ export const ProductDetailPage: React.FC = () => {
                 +
               </button>
             </div>
-            <span className="text-[11px] text-slate-500 font-medium">z 50 sztuk dostępnych</span>
+            <span className="text-[11px] font-medium">
+              {(product.stock ?? 0) === 0 ? (
+                <span className="text-red-600 font-bold">🚫 Produkt chwilowo wyprzedany</span>
+              ) : (product.stock ?? 0) <= 10 ? (
+                <span className="text-amber-700 font-bold">⚠️ Zostało tylko {product.stock} szt. w magazynie!</span>
+              ) : (
+                <span className="text-emerald-700 font-semibold">✓ Dostępne: {product.stock} szt. w magazynie</span>
+              )}
+            </span>
           </div>
 
           {/* Purchase Actions */}
           <div className="space-y-3 pt-4 border-t border-[#EBE6DD]">
             <button
               onClick={handleAdd}
-              className="w-full py-3.5 px-6 rounded-xl font-bold text-sm text-white bg-purple-600 hover:bg-purple-700 active:bg-purple-800 shadow-sm flex items-center justify-center space-x-2 transition-colors"
+              disabled={(product.stock ?? 0) === 0}
+              className={`w-full py-3.5 px-6 rounded-xl font-bold text-sm flex items-center justify-center space-x-2 transition-colors ${
+                (product.stock ?? 0) === 0
+                  ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                  : "text-white bg-purple-600 hover:bg-purple-700 active:bg-purple-800 shadow-sm cursor-pointer"
+              }`}
             >
               <ShoppingBag className="w-4 h-4" />
-              <span>DODAJ DO KOSZYKA</span>
+              <span>{(product.stock ?? 0) === 0 ? "PRODUKT WYPRZEDANY" : "DODAJ DO KOSZYKA"}</span>
             </button>
 
-            <button
-              onClick={handleBuyNow}
-              className="w-full py-3 px-6 rounded-xl font-bold text-sm text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 flex items-center justify-center space-x-2 transition-colors"
-            >
-              <span>KUP TERAZ I PRZEJDŹ DO KASY</span>
-            </button>
+            {(product.stock ?? 0) > 0 && (
+              <button
+                onClick={handleBuyNow}
+                className="w-full py-3 px-6 rounded-xl font-bold text-sm text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 flex items-center justify-center space-x-2 transition-colors cursor-pointer"
+              >
+                <span>KUP TERAZ I PRZEJDŹ DO KASY</span>
+              </button>
+            )}
           </div>
 
           {/* Delivery & Payment Polish Trust Box (Allegro / Reserved style) */}
@@ -538,10 +553,15 @@ export const ProductDetailPage: React.FC = () => {
         </div>
         <button
           onClick={handleAdd}
-          className="py-2.5 px-5 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-black text-xs rounded-xl shadow-xs flex items-center gap-1.5 cursor-pointer"
+          disabled={(product.stock ?? 0) === 0}
+          className={`py-2.5 px-5 font-black text-xs rounded-xl shadow-xs flex items-center gap-1.5 ${
+            (product.stock ?? 0) === 0
+              ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+              : "bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white cursor-pointer"
+          }`}
         >
           <ShoppingBag className="w-4 h-4" />
-          <span>DODAJ DO KOSZYKA</span>
+          <span>{(product.stock ?? 0) === 0 ? "WYPRZEDANE" : "DODAJ DO KOSZYKA"}</span>
         </button>
       </div>
     </div>

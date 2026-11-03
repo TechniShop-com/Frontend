@@ -30,7 +30,14 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const DEFAULT_AVATAR = 'https://api.dicebear.com/7.x/adventurer/svg?seed=TechniHero&backgroundColor=b6e3f4,c0aede,d1d4f9';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    try {
+      const saved = localStorage.getItem('techni_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
 
   useEffect(() => {
     const loadProfile = async (authUser: { id: string; email?: string; user_metadata?: Record<string, any> } | null) => {
@@ -38,10 +45,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(null);
         return;
       }
-      const { data } = await supabase.from('profiles').select('*').eq('id', authUser.id).maybeSingle();
-      if (data) {
-        setUser({ id: data.id, name: data.name, email: data.email, avatarUrl: data.avatarUrl || undefined });
-      }
+      try {
+        const { data } = await supabase.from('profiles').select('*').eq('id', authUser.id).maybeSingle();
+        if (data) {
+          setUser({
+            id: data.id,
+            name: data.name,
+            email: data.email,
+            avatarUrl: data.avatarUrl || undefined,
+            role: data.role === 'admin' ? 'admin' : 'customer',
+          });
+        }
+      } catch {}
     };
 
     supabase.auth.getSession().then(({ data }) => loadProfile(data.session?.user || null));
@@ -63,7 +78,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [user]);
 
   const login = async (email: string, password: string): Promise<{ success: boolean; message?: string }> => {
-    // Basic validation
     if (!email || !password) {
       return { success: false, message: 'Wypełnij wszystkie pola' };
     }
@@ -76,6 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           name: result.user.name,
           email: result.user.email,
           avatarUrl: result.user.avatarUrl || DEFAULT_AVATAR,
+          role: result.user.role || 'customer',
         };
         setUser(loggedUser);
         setIsAuthModalOpen(false);
@@ -83,12 +98,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       return { success: false, message: 'Nieprawidłowe dane logowania' };
     } catch (err: any) {
-      console.error('Błąd logowania w API:', err);
-      const serverMsg = err.response?.data?.error || err.response?.data?.message;
-      return {
-        success: false,
-        message: serverMsg || err.message || 'Nie udało się zalogować. Sprawdź adres email i hasło.',
-      };
+      const serverMsg = err.message || 'Nieprawidłowy adres email lub hasło.';
+      return { success: false, message: serverMsg };
     }
   };
 
@@ -111,6 +122,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           name: result.user.name,
           email: result.user.email,
           avatarUrl: result.user.avatarUrl || DEFAULT_AVATAR,
+          role: 'customer',
         };
         setUser(loggedUser);
         setIsAuthModalOpen(false);
@@ -147,6 +159,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           name: result.user.name,
           email: result.user.email,
           avatarUrl: result.user.avatarUrl || DEFAULT_AVATAR,
+          role: user.role,
         };
         setUser(updatedUser);
         return { success: true, message: result.message || 'Profil został pomyślnie zaktualizowany' };

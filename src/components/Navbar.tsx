@@ -16,6 +16,7 @@ import {
   Flame,
   Package,
   Settings,
+  ShieldCheck,
 } from 'lucide-react';
 import { Logo } from './Logo';
 
@@ -440,6 +441,16 @@ export const Navbar: React.FC<NavbarProps> = () => {
                   </div>
 
                   <div className="pt-2 space-y-1">
+                    {(user?.role === "admin" || (typeof window !== "undefined" && localStorage.getItem("technishop_admin_authenticated") === "true")) && (
+                      <Link
+                        to="/admin"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="w-full flex items-center space-x-2 px-3 py-2 text-xs font-bold text-purple-700 hover:bg-purple-50 rounded-xl transition-colors"
+                      >
+                        <ShieldCheck className="w-4 h-4 text-purple-600" />
+                        <span>Panel Administratora</span>
+                      </Link>
+                    )}
                     <Link
                       to="/settings"
                       onClick={() => setIsUserMenuOpen(false)}
