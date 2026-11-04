@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   X,
   Ruler,
-  Sparkles,
   Check,
   UserCheck,
   Sliders,
@@ -194,6 +194,14 @@ export const FitFinderModal: React.FC<FitFinderModalProps> = ({
   const [build, setBuild] = useState<BodyBuild>(saved?.build || 'REGULAR');
   const [preference, setPreference] = useState<FitPreference>(saved?.preference || 'REGULAR');
   const [step, setStep] = useState<'form' | 'result'>('form');
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const onCloseRef = useRef(onClose);
+  const hasValidSizes = availableSizes.some((size) => ORDERED_SIZES.includes(size));
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (isOpen) {
@@ -223,9 +231,47 @@ export const FitFinderModal: React.FC<FitFinderModalProps> = ({
     [height, weight, build, preference, availableSizes, garmentCategory]
   );
 
+  useEffect(() => {
+    if (!isOpen || !hasValidSizes) return;
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    closeButtonRef.current?.focus();
+
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        onCloseRef.current();
+        return;
+      }
+      if (event.key !== 'Tab' || !dialogRef.current) return;
+
+      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )).filter((element) => element.tabIndex >= 0 && element.getClientRects().length > 0);
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (!first || !last) {
+        event.preventDefault();
+      } else if (event.shiftKey && (document.activeElement === first || !dialogRef.current.contains(document.activeElement))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (document.activeElement === last || !dialogRef.current.contains(document.activeElement))) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('keydown', handleKey);
+      document.body.style.overflow = previousOverflow;
+      previouslyFocused?.focus();
+    };
+  }, [isOpen, hasValidSizes]);
+
   if (!isOpen) return null;
 
-  const hasValidSizes = availableSizes.some((s) => ORDERED_SIZES.includes(s));
   if (!hasValidSizes) return null;
 
   const handleCalculate = () => {
@@ -265,7 +311,6 @@ export const FitFinderModal: React.FC<FitFinderModalProps> = ({
     setStep('form');
   };
 
-  const bmi = (weight / Math.pow(height / 100, 2)).toFixed(1);
   const categoryLabel =
     garmentCategory === 'HOODIE'
       ? 'Bluza Hoodie'
@@ -273,33 +318,29 @@ export const FitFinderModal: React.FC<FitFinderModalProps> = ({
       ? 'Koszulka Polo'
       : 'T-Shirt';
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md anim-fade-in">
-      <div className="bg-white rounded-3xl border border-[#E7E2D8] max-w-2xl w-full overflow-hidden shadow-2xl relative max-h-[92vh] flex flex-col">
-        <div className="bg-gradient-to-r from-[#1E1B4B] via-[#3B0764] to-[#1E1B4B] p-5 sm:p-6 text-white flex items-center justify-between">
+  return createPortal(
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-sm" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="fitfinder-title" className="bg-white rounded-3xl border border-[#E7E2D8] max-w-2xl w-full overflow-hidden shadow-2xl relative max-h-[92vh] flex flex-col">
+        <div className="bg-[#FAF8F5] border-b border-[#EBE6DD] p-5 sm:p-6 text-slate-900 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-2xl bg-purple-500/30 border border-purple-400/40 flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-yellow-300" />
-            </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="text-xs font-black uppercase tracking-wider text-purple-200">
+                <span className="text-xs font-bold uppercase tracking-wider text-purple-700">
                   Techni FitFinder
                 </span>
-                <span className="px-2 py-0.5 text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 rounded-full">
-                  Tabela: {categoryLabel}
-                </span>
               </div>
-              <h3 className="text-lg sm:text-xl font-black tracking-tight">
+              <h3 id="fitfinder-title" className="text-lg sm:text-xl font-black tracking-tight">
                 Asystent Doboru Rozmiaru
               </h3>
             </div>
           </div>
 
           <button
+            ref={closeButtonRef}
             type="button"
             onClick={onClose}
-            className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all cursor-pointer"
+            aria-label="Zamknij asystenta rozmiaru"
+            className="w-10 h-10 rounded-full bg-white hover:bg-purple-50 text-slate-700 flex items-center justify-center transition-all cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -312,7 +353,6 @@ export const FitFinderModal: React.FC<FitFinderModalProps> = ({
                 <span className="text-slate-600 font-medium">
                   Dobierasz rozmiar dla: <strong className="text-slate-900">{productTitle}</strong>
                 </span>
-                <span className="font-bold text-purple-700">Wskaźnik BMI: {bmi}</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -466,17 +506,16 @@ export const FitFinderModal: React.FC<FitFinderModalProps> = ({
                 onClick={handleCalculate}
                 className="w-full py-4 px-6 bg-purple-600 hover:bg-purple-700 text-white font-black text-xs uppercase tracking-wider rounded-2xl shadow-lg flex items-center justify-center space-x-2 transition-all cursor-pointer"
               >
-                <Sparkles className="w-4 h-4 text-yellow-300" />
                 <span>OBLICZ REKOMENDOWANY ROZMIAR</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </>
           ) : (
             <div className="space-y-6">
-              <div className="bg-gradient-to-br from-purple-50 via-white to-indigo-50 border-2 border-purple-200 rounded-3xl p-6 text-center space-y-3 relative overflow-hidden">
-                <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-800 border border-emerald-200">
+              <div className="bg-[#FAF8F5] border border-[#EBE6DD] rounded-3xl p-6 text-center space-y-3 relative overflow-hidden">
+                <span className="inline-flex items-center space-x-1.5 text-xs font-bold text-purple-700">
                   <UserCheck className="w-3.5 h-3.5" />
-                  <span>Rekomendacja na podstawie tabeli wymiarów ({categoryLabel})</span>
+                  <span>Orientacyjna sugestia ({categoryLabel})</span>
                 </span>
 
                 <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -502,6 +541,7 @@ export const FitFinderModal: React.FC<FitFinderModalProps> = ({
                     : 'klasyczny'}
                   ).
                 </p>
+                <p className="text-xs text-slate-600">Wymiary mają charakter orientacyjny. Porównaj je z tabelą konkretnego produktu przed zakupem.</p>
               </div>
 
               <div className="grid grid-cols-3 gap-3 text-center">
@@ -592,7 +632,7 @@ export const FitFinderModal: React.FC<FitFinderModalProps> = ({
           )}
         </div>
       </div>
-    </div>
+    </div>, document.body
   );
 };
 

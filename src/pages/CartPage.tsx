@@ -12,7 +12,6 @@ import {
   Check,
   ShieldCheck,
   Clock,
-  Sparkles,
 } from 'lucide-react';
 
 export const CartPage: React.FC = () => {
@@ -195,7 +194,6 @@ export const CartPage: React.FC = () => {
                 {coupon && discountAmount > 0 && (
                   <div className="flex justify-between items-center text-emerald-700 font-bold">
                     <span className="flex items-center gap-1">
-                      <Sparkles className="w-3.5 h-3.5 text-yellow-500 fill-yellow-400" />
                       <span>Rabat ({coupon.code}):</span>
                     </span>
                     <span className="font-mono">-{discountAmount.toFixed(2)} zł</span>

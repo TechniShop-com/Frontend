@@ -4,7 +4,6 @@ import {
   Tag,
   Check,
   X,
-  Sparkles,
   Loader2,
   Percent,
   CheckCircle2,
@@ -96,7 +95,6 @@ export const PromoCodeBox: React.FC<PromoCodeBoxProps> = ({ compact = false }) =
         {/* Wskaźnik oszczędności */}
         <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-purple-100/80 text-purple-950 font-semibold">
           <span className="flex items-center gap-1">
-            <Sparkles className="w-3.5 h-3.5 text-yellow-500 fill-yellow-400" />
             <span>Zaoszczędzona kwota:</span>
           </span>
           <span className="font-black text-emerald-700 font-mono text-xs">

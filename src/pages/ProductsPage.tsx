@@ -4,15 +4,13 @@ import { MOCK_PRODUCTS } from '../mockData';
 import { Product } from '../types';
 import { getProducts } from '../services/api';
 import { useCart } from '../context/CartContext';
-import { ShoppingBag, Star, Zap, Check, Loader2, Heart, Sparkles, Ruler, UserCheck, Box } from 'lucide-react';
+import { ShoppingBag, Star, Zap, Check, Loader2, Heart, Ruler, UserCheck } from 'lucide-react';
 import {
   FitFinderModal,
   loadSavedFitProfile,
   supportsFitFinder,
   FitProfile,
 } from '../components/FitFinderModal';
-import { Model3DModal } from '../components/Model3DModal';
-import { hasProduct3DModel } from '../config/model3dConfig';
 
 const getColorHex = (colorName: string): string => {
   const c = colorName.toLowerCase();
@@ -39,7 +37,6 @@ export const ProductsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isFitFinderOpen, setIsFitFinderOpen] = useState(false);
   const [fitProfile, setFitProfile] = useState<FitProfile | null>(() => loadSavedFitProfile());
-  const [modal3DProduct, setModal3DProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     const syncProfile = () => setFitProfile(loadSavedFitProfile());
@@ -147,21 +144,21 @@ export const ProductsPage: React.FC = () => {
       )}
 
       {categoryParam !== 'akcesoria' && (
-        <div className="bg-gradient-to-r from-[#1E1B4B] via-[#3B0764] to-[#1E1B4B] rounded-3xl p-4 sm:p-5 text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md border border-purple-500/20">
+        <div className="bg-white rounded-3xl p-4 sm:p-5 text-slate-900 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm border border-[#EBE6DD]">
           <div className="flex items-center space-x-3.5">
-            <div className="w-10 h-10 rounded-2xl bg-purple-500/30 border border-purple-400/40 flex items-center justify-center shrink-0">
-              <Ruler className="w-5 h-5 text-yellow-300" />
+            <div className="w-10 h-10 rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-center shrink-0">
+              <Ruler className="w-5 h-5 text-purple-700" />
             </div>
             <div>
               <div className="text-xs sm:text-sm font-black tracking-tight flex items-center space-x-2">
                 <span>Nie wiesz jaki rozmiar wybrać?</span>
                 {fitProfile && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
                     Twój rozmiar FitFinder: {fitProfile.recommendedSize}
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-purple-200/80 font-medium">
+              <p className="text-[11px] text-slate-600 font-medium">
                 Podaj wzrost, wagę oraz preferowany krój, a kalkulator FitFinder dobierze odpowiedni rozmiar odzieży.
               </p>
             </div>
@@ -170,9 +167,8 @@ export const ProductsPage: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsFitFinderOpen(true)}
-            className="px-4 py-2.5 rounded-xl bg-white text-purple-950 hover:bg-purple-50 font-black text-xs shrink-0 flex items-center space-x-1.5 shadow-sm transition-all cursor-pointer"
+            className="px-4 py-2.5 rounded-xl bg-purple-600 text-white hover:bg-purple-700 font-black text-xs shrink-0 flex items-center space-x-1.5 shadow-sm transition-all cursor-pointer"
           >
-            <Sparkles className="w-3.5 h-3.5 text-purple-600" />
             <span>{fitProfile ? 'Zmień profil rozmiaru' : 'Uruchom Asystenta Rozmiaru'}</span>
           </button>
         </div>
@@ -232,20 +228,6 @@ export const ProductsPage: React.FC = () => {
                           <span>Twój rozmiar: {fitProfile.recommendedSize}</span>
                         </span>
                       )}
-                    {hasProduct3DModel(product) && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setModal3DProduct(product);
-                        }}
-                        className="px-2.5 py-1 rounded-full text-[9px] font-black bg-slate-900/90 hover:bg-purple-900 text-yellow-300 shadow-sm border border-purple-400/40 flex items-center space-x-1 hover:scale-105 transition-all cursor-pointer"
-                        title="Otwórz interaktywny model 3D w 360°"
-                      >
-                        <Box className="w-3 h-3 text-yellow-300 animate-pulse" />
-                        <span>Podgląd 3D</span>
-                      </button>
-                    )}
                   </div>
 
                   {/* Wishlist Heart Button */}
@@ -366,11 +348,6 @@ export const ProductsPage: React.FC = () => {
       <FitFinderModal
         isOpen={isFitFinderOpen}
         onClose={() => setIsFitFinderOpen(false)}
-      />
-      <Model3DModal
-        product={modal3DProduct}
-        isOpen={!!modal3DProduct}
-        onClose={() => setModal3DProduct(null)}
       />
     </div>
   );
