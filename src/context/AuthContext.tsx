@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase';
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
+  isAuthLoading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
   register: (name: string, email: string, password: string) => Promise<{ success: boolean; message?: string }>;
   loginWithGoogle: (data: { email: string; name: string; avatarUrl?: string }) => Promise<{ success: boolean; message?: string }>;
@@ -30,23 +31,26 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const DEFAULT_AVATAR = 'https://api.dicebear.com/7.x/adventurer/svg?seed=TechniHero&backgroundColor=b6e3f4,c0aede,d1d4f9';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(() => {
-    try {
-      const saved = localStorage.getItem('techni_user');
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [user, setUser] = useState<User | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   useEffect(() => {
+    let active = true;
+    let requestVersion = 0;
     const loadProfile = async (authUser: { id: string; email?: string; user_metadata?: Record<string, any> } | null) => {
+      const version = ++requestVersion;
       if (!authUser) {
         setUser(null);
+        setIsAuthLoading(false);
         return;
       }
       try {
-        const { data } = await supabase.from('profiles').select('*').eq('id', authUser.id).maybeSingle();
+        const { data, error } = await supabase.from('profiles').select('*').eq('id', authUser.id).maybeSingle();
+        if (!active || version !== requestVersion) return;
+        if (error || !data || data.is_deleted) {
+          setUser(null);
+          return;
+        }
         if (data) {
           setUser({
             id: data.id,
@@ -56,14 +60,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             role: data.role === 'admin' ? 'admin' : 'customer',
           });
         }
-      } catch {}
+      } catch {
+        if (active && version === requestVersion) setUser(null);
+      } finally {
+        if (active && version === requestVersion) setIsAuthLoading(false);
+      }
     };
 
     supabase.auth.getSession().then(({ data }) => loadProfile(data.session?.user || null));
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       void loadProfile(session?.user || null);
     });
-    return () => listener.subscription.unsubscribe();
+    return () => {
+      active = false;
+      listener.subscription.unsubscribe();
+    };
   }, []);
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -212,6 +223,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         user,
         isAuthenticated: !!user,
+        isAuthLoading,
         login,
         register,
         loginWithGoogle,

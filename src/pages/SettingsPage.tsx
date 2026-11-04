@@ -106,7 +106,7 @@ interface ToastNotification {
 }
 
 export const SettingsPage: React.FC = () => {
-  const { user, isAuthenticated, updateProfile, logout } = useAuth();
+  const { user, isAuthenticated, isAuthLoading, updateProfile, logout } = useAuth();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<TabType>('general');
@@ -149,10 +149,10 @@ export const SettingsPage: React.FC = () => {
 
   // Przekieruj jeśli użytkownik nie jest zalogowany
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isAuthLoading && !isAuthenticated) {
       navigate('/login');
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthLoading, isAuthenticated, navigate]);
 
   // Zamykanie okienka po kliknięciu poza nim
   useEffect(() => {

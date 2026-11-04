@@ -1,18 +1,28 @@
-# Dezaktywacja konta: wymagania po stronie Supabase
+# Dezaktywacja i przywracanie konta
 
-Interfejs wywołuje Edge Function `deactivate-account` bez podawania identyfikatora konta i uznaje operację za zakończoną tylko po odpowiedzi `{ "status": "completed" }`. Funkcja nie jest jeszcze wdrożona: przed uruchomieniem należy przygotować i przetestować konfigurację po stronie Supabase. Błąd lub brak potwierdzenia może oznaczać częściowo zakończoną operację, dlatego interfejs nie obiecuje, że konto jest nadal aktywne.
+Przycisk w ustawieniach wywołuje `deactivate-account` bez przekazywania identyfikatora użytkownika. Funkcja sprawdza sesję, zapisuje `profiles.is_deleted = true`, wylogowuje wszystkie sesje i blokuje logowanie przez Supabase Auth. Odpowiada `completed` dopiero po zakończeniu tych operacji. Konto i zamówienia pozostają w bazie. `deleted_at` zapisuje czas dezaktywacji; nie jest to automatyczna polityka retencji ani trwałe usunięcie danych.
 
-Zadanie dla administratora Supabase: przygotuj migrację dostosowaną do rzeczywistego schematu i obowiązujących polityk RLS. Dodaj chronione przed zapisem klienta `profiles.deleted` i wersję tokenu, zachowaj zamówienia i powiązania. Funkcja Edge ma weryfikować JWT, ustalać użytkownika z sesji, a nie z danych wejściowych, i rozpocząć dezaktywację od atomowej zmiany stanu w bazie. Status oraz weryfikacja wersji tokenu muszą blokować stare JWT przez odpowiednio dostosowane restrykcyjne polityki RLS; uwzględnij wszystkie polityki, funkcje `SECURITY DEFINER`, Storage i Edge Functions mające dostęp do danych. Następnie funkcja serwerowa korzysta z Auth Admin API do blokady konta i unieważnienia sesji. Klucz serwisowy nie może trafić do przeglądarki.
+Polityki RLS sprawdzają status konta i istnienie sesji po stronie bazy. Przywrócenie aktualizuje `sessions_valid_after`, więc nawet sesja powstała w trakcie przywracania nie odzyskuje dostępu. Zwykły klient nie może zmieniać pól blokady. Funkcja `send-order-email` sprawdza zamówienie przez RLS i wymaga, by należało do zalogowanego użytkownika; adres i treść pochodzą z zamówienia w bazie.
 
-Zaprojektuj idempotentną obsługę częściowych błędów: po ustawieniu blokady nie odblokowuj konta automatycznie, a zaufany proces musi móc dokończyć lub uzgodnić operację nawet wtedy, gdy klient został już odcięty. Przywracanie ma być dostępne wyłącznie administratorowi i skoordynować odblokowanie Auth, zmianę stanu i nową wersję tokenu tak, aby stare sesje nie wróciły do życia. Przygotuj testy równoczesnej dezaktywacji i przywracania.
+## Wdrożenie
 
-Przed zmianą Auth Hooks sprawdź ich istniejącą konfigurację i plan wdrożenia z rollbackiem. Token hook oraz restrykcyjne RLS wymagają etapowego wprowadzenia, aby nie zablokować aktywnych kont bez nowego claimu. Sprawdź działanie dla logowania hasłem, OAuth, odświeżania i nowych kont. Nie włączaj migracji na produkcji przed testami w izolowanym środowisku. Sprawdź wpływ retencji i żądań usunięcia danych z osobą odpowiedzialną za zgodność.
+Migracja `supabase/migrations/20261104203812_account_deactivation.sql` zakłada istniejący schemat TechniShop (`profiles`, `orders`, `cart_items`, `admin_users`, `Product`) i obecne polityki RLS. Nie jest kompletną migracją całej bazy. Przed wdrożeniem porównaj aktualny schemat, granty, polityki i inne punkty dostępu z migracją. Sprawdź też, czy nie dodano nowych tabel, polityk Storage ani funkcji serwerowych, które należy objąć tym samym zabezpieczeniem. Nie nadpisuj istniejących funkcji bez porównania ich aktualnego kodu.
 
-Przed wdrożeniem przetestuj izolowane konto: dezaktywację, ponowną próbę logowania hasłem i OAuth, odświeżenie sesji, użycie wcześniej wydanego tokenu do odczytu i zapisu, zachowanie zamówień, niedozwolone zmiany statusu przez zwykłego użytkownika oraz przywrócenie przez administratora. Nie zmieniaj rzeczywistych kont w produkcji podczas testów.
+1. W izolowanym środowisku sprawdź migrację i obie funkcje, w tym logowanie hasłem i OAuth, odświeżanie sesji, stare JWT, uprawnienia administratora i proces przywracania.
+2. Zaplanuj odwrócenie zmian i dostęp awaryjny. Upewnij się, że w Auth są dostępne sesje istniejących użytkowników: polityki wymagają prawidłowego `session_id` z JWT i rekordu w `auth.sessions`.
+3. Wdróż uaktualnioną funkcję `send-order-email`, migrację oraz `deactivate-account` z weryfikacją JWT; dopiero po potwierdzeniu działania udostępnij interfejs. Klucz `service_role` pozostaje wyłącznie w zaufanym środowisku.
+4. Przed włączeniem dla klientów ustal zasady retencji, żądań usunięcia danych i obsługi przywracania. Dezaktywacja konta nie musi sama w sobie spełniać wszystkich takich żądań.
 
-## Ustalenia przed implementacją
+## Przywrócenie przez zaufanego operatora
 
-- Projekt TechniShop nie ma obecnie gałęzi testowej Supabase. Docelowa implementacja wymaga testów w izolowanym środowisku przed wdrożeniem. Nie wykonywano zmian na produkcji.
-- W kodzie panelu administratora istnieje lokalny fallback uwierzytelniania oparty na `localStorage` i kodzie dostępnym w przeglądarce. Nie może on stanowić podstawy dostępu ani przywracania kont; uprawnienia administratora muszą być sprawdzane po stronie zaufanego serwera i bazy. Należy oddzielnie usunąć taki fallback i przetestować działanie panelu.
-- Wdrożona funkcja `send-order-email` ma włączoną weryfikację JWT, ale w odczytanym kodzie nie sprawdza stanu konta, wersji JWT ani powiązania użytkownika z zamówieniem i przyjmuje adres odbiorcy z żądania. Dostęp do tej funkcji musi zostać objęty projektem blokowania kont oraz osobnym przeglądem nadużyć. Nie testowano wysyłania wiadomości.
-- W projekcie jest jeden administrator; przed testami i uruchomieniem procesu przywracania potrzebna jest bezpieczna procedura odzyskiwania dostępu bez polegania na dezaktywowanym koncie.
+Przywrócenie wymaga **zarówno** odblokowania w Auth, jak i zmiany statusu w bazie. Nie wystarczy ręcznie ustawić `is_deleted = false`. W zaufanym środowisku ustaw zmienne `TECHNISHOP_SUPABASE_URL` i `TECHNISHOP_SUPABASE_SERVICE_ROLE_KEY`, a następnie uruchom `node scripts/restore-account.mjs <user-uuid>`. Nie zapisuj klucza w repozytorium ani nie podawaj go przeglądarce.
+
+Skrypt przyjmuje tylko konto z potwierdzoną dezaktywacją. Zabezpiecza jednoczesne próby, odblokowuje Auth, zmienia status i pozostawia starsze sesje zablokowane. W razie błędu stara się ponownie zablokować Auth; jeśli proces zostanie przerwany, konto może wymagać ręcznego uzgodnienia. Przed wznowieniem sprawdź `is_deleted`, `deactivation_completed_at`, `restoration_started_at` i blokadę w Auth. Nie uruchamiaj równocześnie innych operacji na tym koncie. Pole `restoration_started_at` pozostawione po przerwaniu operacji wymaga interwencji zaufanego operatora.
+
+Jeśli `is_deleted = true`, a `deactivation_completed_at` jest puste, dezaktywacja nie została potwierdzona. Konto pozostaje odcięte od danych przez RLS, ale zależnie od miejsca błędu blokada logowania w Auth może wymagać dokończenia. Operator powinien zablokować konto w Auth, sprawdzić sesje i dopiero po uzgodnieniu oznaczyć proces jako zakończony. Nie zakładaj sukcesu na podstawie samego statusu w interfejsie.
+
+## Lokalne testy
+
+`supabase/tests/local_base_fixture.sql` odtwarza wyłącznie minimalny schemat testowy i nie zawiera danych produkcyjnych. Na pustej lokalnej bazie Supabase zastosuj ten fixture, a następnie migrację; uruchom `npx supabase functions serve` i `node supabase/tests/account-deactivation.mjs`. Test tworzy wyłącznie konta `example.invalid`, sprawdza uprawnienia, dezaktywację, blokadę logowania i sesji, zachowanie zamówienia, wpływ na drugie konto, błąd Auth oraz przywrócenie, po czym usuwa dane testowe. Nie wysyła wiadomości.
+
+Test lokalny nie zastępuje testu rzeczywistego logowania OAuth ani kontroli schematu i konfiguracji projektu przed wdrożeniem. W panelu administratora istnieje też lokalny fallback uwierzytelniania; nie wolno używać go do przywracania kont.
