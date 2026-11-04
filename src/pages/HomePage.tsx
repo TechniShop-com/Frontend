@@ -15,10 +15,18 @@ import {
   RotateCcw,
   ShieldCheck,
   Sparkles,
+  Ruler,
+  UserCheck,
   Box,
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { HeroSlider } from '../components/HeroSlider';
+import {
+  FitFinderModal,
+  loadSavedFitProfile,
+  supportsFitFinder,
+  FitProfile,
+} from '../components/FitFinderModal';
 import { Home3DShowcase } from '../components/Home3DShowcase';
 import { Model3DModal } from '../components/Model3DModal';
 import { hasProduct3DModel } from '../config/model3dConfig';
@@ -48,7 +56,15 @@ export const HomePage: React.FC<HomePageProps> = () => {
   const [loading, setLoading] = useState(true);
   const [quickNotice, setQuickNotice] = useState<string | null>(null);
   const [wishlist, setWishlist] = useState<string[]>([]);
+  const [isFitFinderOpen, setIsFitFinderOpen] = useState(false);
+  const [fitProfile, setFitProfile] = useState<FitProfile | null>(() => loadSavedFitProfile());
   const [modal3DProduct, setModal3DProduct] = useState<Product | null>(null);
+
+  useEffect(() => {
+    const syncProfile = () => setFitProfile(loadSavedFitProfile());
+    window.addEventListener('fitProfileUpdated', syncProfile);
+    return () => window.removeEventListener('fitProfileUpdated', syncProfile);
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -172,7 +188,7 @@ export const HomePage: React.FC<HomePageProps> = () => {
 
       {/* FEATURED PRODUCTS SECTION */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        <div className="flex items-center justify-between border-b border-[#E8E2D8] pb-4">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#E8E2D8] pb-4">
           <div>
             <h2 className="text-2xl font-black text-slate-900 tracking-tight flex items-center space-x-2">
               <Zap className="w-5 h-5 text-purple-600" />
@@ -183,13 +199,28 @@ export const HomePage: React.FC<HomePageProps> = () => {
             </p>
           </div>
 
-          <Link
-            to="/products"
-            className="text-xs font-black text-purple-700 hover:text-purple-900 flex items-center space-x-1 hover:underline"
-          >
-            <span>Zobacz wszystko</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+          <div className="flex items-center space-x-4">
+            <button
+              type="button"
+              onClick={() => setIsFitFinderOpen(true)}
+              className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-black text-xs flex items-center space-x-1.5 shadow-xs transition-all cursor-pointer"
+            >
+              <Ruler className="w-3.5 h-3.5 text-yellow-300" />
+              <span>
+                {fitProfile
+                  ? `Twój rozmiar FitFinder: ${fitProfile.recommendedSize}`
+                  : 'Dobierz rozmiar FitFinder'}
+              </span>
+            </button>
+
+            <Link
+              to="/products"
+              className="text-xs font-black text-purple-700 hover:text-purple-900 flex items-center space-x-1 hover:underline"
+            >
+              <span>Zobacz wszystko</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
         </div>
 
         {/* Loading Spinner / Product Grid */}
@@ -227,6 +258,14 @@ export const HomePage: React.FC<HomePageProps> = () => {
                           : 'Unisex'}
                       </span>
 
+                      {fitProfile &&
+                        supportsFitFinder(product) &&
+                        product.sizes.includes(fitProfile.recommendedSize) && (
+                          <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black bg-emerald-600 text-white shadow-xs flex items-center space-x-1">
+                            <UserCheck className="w-2.5 h-2.5" />
+                            <span>Twój rozmiar: {fitProfile.recommendedSize}</span>
+                          </span>
+                        )}
                       {hasProduct3DModel(product) && (
                         <button
                           type="button"
@@ -271,7 +310,11 @@ export const HomePage: React.FC<HomePageProps> = () => {
                           <button
                             key={sz}
                             onClick={(e) => handleQuickSizeAdd(e, product, sz)}
-                            className="min-w-6 h-6 px-1.5 text-[10px] font-black rounded-md bg-[#FAF7F2] hover:bg-purple-600 hover:text-white text-slate-800 border border-[#DDD8CD] transition-all flex items-center justify-center hover:scale-105 active:scale-95"
+                            className={`min-w-6 h-6 px-1.5 text-[10px] font-black rounded-md transition-all flex items-center justify-center hover:scale-105 active:scale-95 ${
+                              supportsFitFinder(product) && fitProfile?.recommendedSize === sz
+                                ? 'bg-emerald-600 text-white border border-emerald-700'
+                                : 'bg-[#FAF7F2] hover:bg-purple-600 hover:text-white text-slate-800 border border-[#DDD8CD]'
+                            }`}
                             title={`Kup rozmiar ${sz}`}
                           >
                             {sz}
@@ -348,6 +391,10 @@ export const HomePage: React.FC<HomePageProps> = () => {
         </div>
       </section>
 
+      <FitFinderModal
+        isOpen={isFitFinderOpen}
+        onClose={() => setIsFitFinderOpen(false)}
+      />
       <Model3DModal
         product={modal3DProduct}
         isOpen={!!modal3DProduct}
