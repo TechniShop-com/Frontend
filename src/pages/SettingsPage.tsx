@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Logo } from '../components/Logo';
+import { supabase } from '../lib/supabase';
 import {
   User,
   Shield,
@@ -133,6 +134,7 @@ export const SettingsPage: React.FC = () => {
   const [notifyOrders, setNotifyOrders] = useState(true);
   const [notifyPromos, setNotifyPromos] = useState(true);
   const [isSavingAdvanced, setIsSavingAdvanced] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   // Stan zapisu i powiadomień
   const [isSaving, setIsSaving] = useState(false);
@@ -770,18 +772,29 @@ export const SettingsPage: React.FC = () => {
                     <div>
                       <p className="text-sm font-bold text-slate-800">Usunięcie konta</p>
                       <p className="text-xs text-slate-400 mt-0.5">
-                        Trwałe usunięcie Twojego profilu i historii zakupów
+                        Konto zostanie dezaktywowane, a historia zamówień zachowana.
                       </p>
                     </div>
 
                     <button
                       type="button"
-                      onClick={() => {
-                        alert('W celu usunięcia konta prosimy o kontakt z administratorem TechniShop: support@technischools.com');
+                      disabled={isDeletingAccount}
+                      onClick={async () => {
+                        if (!window.confirm('Czy na pewno chcesz dezaktywować konto? Historia zamówień zostanie zachowana.')) return;
+                        setIsDeletingAccount(true);
+                        try {
+                          const { data, error } = await supabase.functions.invoke('deactivate-account');
+                          if (error) throw error;
+                          if (data?.status !== 'completed') throw new Error('Deactivation not confirmed');
+                          logout();
+                          navigate('/login');
+                        } catch {
+                          showToast('error', 'Nie udało się potwierdzić dezaktywacji. Konto mogło zostać zablokowane — skontaktuj się z obsługą.');
+                        } finally { setIsDeletingAccount(false); }
                       }}
                       className="px-4 py-2 rounded-xl text-xs font-bold text-red-600 border border-red-200 hover:bg-red-50 hover:border-red-300 transition-colors shrink-0"
                     >
-                      Usuń konto
+                      {isDeletingAccount ? 'Zapisywanie…' : 'Dezaktywuj konto'}
                     </button>
                   </div>
                 </div>
