@@ -17,6 +17,7 @@ import {
   Sparkles,
   Ruler,
   UserCheck,
+  Box,
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { HeroSlider } from '../components/HeroSlider';
@@ -26,6 +27,9 @@ import {
   supportsFitFinder,
   FitProfile,
 } from '../components/FitFinderModal';
+import { Home3DShowcase } from '../components/Home3DShowcase';
+import { Model3DModal } from '../components/Model3DModal';
+import { hasProduct3DModel } from '../config/model3dConfig';
 
 const getColorHex = (colorName: string): string => {
   const c = colorName.toLowerCase();
@@ -54,6 +58,7 @@ export const HomePage: React.FC<HomePageProps> = () => {
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [isFitFinderOpen, setIsFitFinderOpen] = useState(false);
   const [fitProfile, setFitProfile] = useState<FitProfile | null>(() => loadSavedFitProfile());
+  const [modal3DProduct, setModal3DProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     const syncProfile = () => setFitProfile(loadSavedFitProfile());
@@ -169,6 +174,10 @@ export const HomePage: React.FC<HomePageProps> = () => {
         </div>
       </section>
 
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <Home3DShowcase />
+      </section>
+
       {/* QUICK NOTICE TOAST */}
       {quickNotice && (
         <div className="fixed bottom-6 right-6 z-50 bg-purple-600 text-white px-6 py-3 rounded-2xl shadow-2xl font-black text-xs flex items-center space-x-2 anim-wiggle">
@@ -257,6 +266,20 @@ export const HomePage: React.FC<HomePageProps> = () => {
                             <span>Twój rozmiar: {fitProfile.recommendedSize}</span>
                           </span>
                         )}
+                      {hasProduct3DModel(product) && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setModal3DProduct(product);
+                          }}
+                          className="px-2.5 py-1 rounded-full text-[9px] font-black bg-slate-900/90 hover:bg-purple-900 text-yellow-300 shadow-sm border border-purple-400/40 flex items-center space-x-1 hover:scale-105 transition-all cursor-pointer"
+                          title="Otwórz interaktywny model 3D w 360°"
+                        >
+                          <Box className="w-3 h-3 text-yellow-300 animate-pulse" />
+                          <span>Podgląd 3D</span>
+                        </button>
+                      )}
                     </div>
 
                     {/* Wishlist Heart Button */}
@@ -371,6 +394,11 @@ export const HomePage: React.FC<HomePageProps> = () => {
       <FitFinderModal
         isOpen={isFitFinderOpen}
         onClose={() => setIsFitFinderOpen(false)}
+      />
+      <Model3DModal
+        product={modal3DProduct}
+        isOpen={!!modal3DProduct}
+        onClose={() => setModal3DProduct(null)}
       />
     </div>
   );

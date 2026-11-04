@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { MOCK_PRODUCTS } from '../mockData';
 import { Product } from '../types';
 import { getProductById } from '../services/api';
 import { useCart } from '../context/CartContext';
 import { ProductReviewsSection } from '../components/ProductReviewsSection';
+import { getProduct3DConfig } from '../config/model3dConfig';
 import {
   FitFinderModal,
   loadSavedFitProfile,
@@ -23,8 +24,11 @@ import {
   Clock,
   Sparkles,
   UserCheck,
+  Image as ImageIcon,
+  Loader2,
 } from 'lucide-react';
 
+const LazyProduct3DViewer = lazy(() => import('../components/Product3DViewer'));
 
 export const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -49,7 +53,19 @@ export const ProductDetailPage: React.FC = () => {
     return () => window.removeEventListener('fitProfileUpdated', syncProfile);
   }, []);
 
+  const model3DConfig = useMemo(() => getProduct3DConfig(product), [product]);
+  const supports3D = model3DConfig !== null;
+  const [mediaMode, setMediaMode] = useState<'2d' | '3d'>(() =>
+    getProduct3DConfig(product) ? '3d' : '2d'
+  );
+
   useEffect(() => {
+    const initialMock = MOCK_PRODUCTS.find((p) => p.id === id) || MOCK_PRODUCTS[0];
+    setProduct(initialMock);
+    setSelectedColor(initialMock.colors[0] || 'Domyślny');
+    setSelectedSize(initialMock.sizes[0] || 'M');
+    setMediaMode(getProduct3DConfig(initialMock) ? '3d' : '2d');
+
     if (!id) return;
     const fetchProduct = async () => {
       try {
@@ -63,6 +79,7 @@ export const ProductDetailPage: React.FC = () => {
           } else {
             setSelectedSize(data.sizes[0] || 'M');
           }
+          setMediaMode(getProduct3DConfig(data) ? '3d' : '2d');
         }
       } catch (err) {
         console.warn('Backend niedostępny, używam produktu mock:', err);
@@ -116,22 +133,82 @@ export const ProductDetailPage: React.FC = () => {
         <span className="text-slate-900 font-bold truncate max-w-xs">{product.title}</span>
       </nav>
 
-      {/* TOP SECTION: ALLEGRO-STYLE (Left: Large Photo Gallery, Right: Purchase Box) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* LEFT: Large Photo & Highlights (5 cols on lg) */}
         <div className="lg:col-span-6 space-y-4">
-          <div className="bg-white rounded-3xl border border-[#EBE6DD] p-4 sm:p-8 shadow-xs relative overflow-hidden group">
-            <span className="absolute top-4 left-4 z-20 px-3 py-1 bg-purple-600 text-white font-bold text-[10px] uppercase tracking-wider rounded-full shadow-sm">
-              {product.gender === 'WOMEN' ? 'Damskie' : product.gender === 'MEN' ? 'Męskie' : 'Unisex'}
-            </span>
+          <div className="bg-white rounded-3xl border border-[#EBE6DD] p-4 sm:p-6 shadow-xs relative overflow-hidden space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-[#EBE6DD]">
+              {supports3D ? (
+                <div className="flex items-center space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => setMediaMode('3d')}
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center space-x-1.5 cursor-pointer ${
+                      mediaMode === '3d'
+                        ? 'bg-purple-600 text-white shadow-xs ring-2 ring-purple-300'
+                        : 'bg-[#FAF7F2] text-slate-700 hover:bg-purple-50 hover:text-purple-700'
+                    }`}
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-yellow-300 animate-pulse" />
+                    <span>Model 3D 360°</span>
+                  </button>
 
-            <div className="aspect-square w-full rounded-2xl overflow-hidden bg-[#FAF7F2] flex items-center justify-center">
-              <img
-                src={product.imageUrl}
-                alt={product.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-              />
+                  <button
+                    type="button"
+                    onClick={() => setMediaMode('2d')}
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center space-x-1.5 cursor-pointer ${
+                      mediaMode === '2d'
+                        ? 'bg-purple-600 text-white shadow-xs'
+                        : 'bg-[#FAF7F2] text-slate-700 hover:bg-purple-50 hover:text-purple-700'
+                    }`}
+                  >
+                    <ImageIcon className="w-3.5 h-3.5" />
+                    <span>Zdjęcie 2D</span>
+                  </button>
+                </div>
+              ) : (
+                <span className="text-xs font-bold text-slate-500 flex items-center space-x-1.5">
+                  <ImageIcon className="w-3.5 h-3.5 text-purple-600" />
+                  <span>Galeria produktu</span>
+                </span>
+              )}
+
+              <span className="px-2.5 py-1 bg-purple-100 text-purple-800 font-bold text-[10px] uppercase tracking-wider rounded-full">
+                {product.gender === 'WOMEN' ? 'Damskie' : product.gender === 'MEN' ? 'Męskie' : 'Unisex'}
+              </span>
             </div>
+
+            {supports3D && mediaMode === '3d' && model3DConfig ? (
+              <div className="w-full h-[450px] sm:h-[480px] rounded-2xl overflow-hidden relative bg-[#FAF7F2]">
+                <Suspense
+                  fallback={
+                    <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-xs font-bold text-purple-900">
+                      <Loader2 className="w-7 h-7 animate-spin text-purple-600" />
+                      <span>Wczytywanie modelu 3D...</span>
+                    </div>
+                  }
+                >
+                  <LazyProduct3DViewer
+                    selectedColor={selectedColor}
+                    onColorChange={setSelectedColor}
+                    availableColors={model3DConfig.supportedColors}
+                    height="h-full"
+                    autoRotateDefault={true}
+                    modelUrl={model3DConfig.modelUrl}
+                    hotspots={model3DConfig.hotspots}
+                    fallbackImageUrl={product.imageUrl}
+                    productTitle={product.title}
+                  />
+                </Suspense>
+              </div>
+            ) : (
+              <div className="aspect-square w-full rounded-2xl overflow-hidden bg-[#FAF7F2] flex items-center justify-center relative group">
+                <img
+                  src={product.imageUrl}
+                  alt={product.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                />
+              </div>
+            )}
           </div>
 
           {/* Guarantee Badges below image */}
@@ -182,7 +259,6 @@ export const ProductDetailPage: React.FC = () => {
                   (Opinie kupujących)
                 </span>
               </button>
-
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-tight">
@@ -331,25 +407,40 @@ export const ProductDetailPage: React.FC = () => {
                 +
               </button>
             </div>
-            <span className="text-[11px] text-slate-500 font-medium">z 50 sztuk dostępnych</span>
+            <span className="text-[11px] font-medium">
+              {(product.stock ?? 0) === 0 ? (
+                <span className="text-red-600 font-bold">🚫 Produkt chwilowo wyprzedany</span>
+              ) : (product.stock ?? 0) <= 10 ? (
+                <span className="text-amber-700 font-bold">⚠️ Zostało tylko {product.stock} szt. w magazynie!</span>
+              ) : (
+                <span className="text-emerald-700 font-semibold">✓ Dostępne: {product.stock} szt. w magazynie</span>
+              )}
+            </span>
           </div>
 
           {/* Purchase Actions */}
           <div className="space-y-3 pt-4 border-t border-[#EBE6DD]">
             <button
               onClick={handleAdd}
-              className="w-full py-3.5 px-6 rounded-xl font-bold text-sm text-white bg-purple-600 hover:bg-purple-700 active:bg-purple-800 shadow-sm flex items-center justify-center space-x-2 transition-colors"
+              disabled={(product.stock ?? 0) === 0}
+              className={`w-full py-3.5 px-6 rounded-xl font-bold text-sm flex items-center justify-center space-x-2 transition-colors ${
+                (product.stock ?? 0) === 0
+                  ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                  : "text-white bg-purple-600 hover:bg-purple-700 active:bg-purple-800 shadow-sm cursor-pointer"
+              }`}
             >
               <ShoppingBag className="w-4 h-4" />
-              <span>DODAJ DO KOSZYKA</span>
+              <span>{(product.stock ?? 0) === 0 ? "PRODUKT WYPRZEDANY" : "DODAJ DO KOSZYKA"}</span>
             </button>
 
-            <button
-              onClick={handleBuyNow}
-              className="w-full py-3 px-6 rounded-xl font-bold text-sm text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 flex items-center justify-center space-x-2 transition-colors"
-            >
-              <span>KUP TERAZ I PRZEJDŹ DO KASY</span>
-            </button>
+            {(product.stock ?? 0) > 0 && (
+              <button
+                onClick={handleBuyNow}
+                className="w-full py-3 px-6 rounded-xl font-bold text-sm text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 flex items-center justify-center space-x-2 transition-colors cursor-pointer"
+              >
+                <span>KUP TERAZ I PRZEJDŹ DO KASY</span>
+              </button>
+            )}
           </div>
 
           {/* Delivery & Payment Polish Trust Box (Allegro / Reserved style) */}
@@ -447,7 +538,6 @@ export const ProductDetailPage: React.FC = () => {
               Społeczność
             </span>
           </button>
-
         </div>
 
         {/* Tab Content */}
@@ -585,7 +675,6 @@ export const ProductDetailPage: React.FC = () => {
         </div>
       </div>
 
-
       {/* Sticky Mobile Add To Cart Bar (Reserved / Zara / Zalando mobile standard) */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#FAF8F5]/95 backdrop-blur-md border-t border-[#E3DDD2] p-3 z-40 flex items-center justify-between shadow-2xl">
         <div>
@@ -599,10 +688,15 @@ export const ProductDetailPage: React.FC = () => {
         </div>
         <button
           onClick={handleAdd}
-          className="py-2.5 px-5 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-black text-xs rounded-xl shadow-xs flex items-center gap-1.5 cursor-pointer"
+          disabled={(product.stock ?? 0) === 0}
+          className={`py-2.5 px-5 font-black text-xs rounded-xl shadow-xs flex items-center gap-1.5 ${
+            (product.stock ?? 0) === 0
+              ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+              : "bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white cursor-pointer"
+          }`}
         >
           <ShoppingBag className="w-4 h-4" />
-          <span>DODAJ DO KOSZYKA</span>
+          <span>{(product.stock ?? 0) === 0 ? "WYPRZEDANE" : "DODAJ DO KOSZYKA"}</span>
         </button>
       </div>
 

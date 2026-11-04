@@ -1,8 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
 
-const url = import.meta.env.VITE_SUPABASE_URL;
-const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const url = import.meta.env.VITE_SUPABASE_URL || 'https://technishop-mock.supabase.co';
+const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'technishop-mock-anon-key-123456789';
 
-if (!url || !key) throw new Error('Brakuje VITE_SUPABASE_URL lub VITE_SUPABASE_PUBLISHABLE_KEY');
+export const isSupabaseConfigured = Boolean(
+  import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
+);
 
-export const supabase = createClient(url, key);
+export const supabase = createClient(url, key, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: false,
+  },
+});

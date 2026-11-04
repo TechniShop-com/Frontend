@@ -4,13 +4,15 @@ import { MOCK_PRODUCTS } from '../mockData';
 import { Product } from '../types';
 import { getProducts } from '../services/api';
 import { useCart } from '../context/CartContext';
-import { ShoppingBag, Star, Zap, Check, Loader2, Heart, Sparkles, Ruler, UserCheck } from 'lucide-react';
+import { ShoppingBag, Star, Zap, Check, Loader2, Heart, Sparkles, Ruler, UserCheck, Box } from 'lucide-react';
 import {
   FitFinderModal,
   loadSavedFitProfile,
   supportsFitFinder,
   FitProfile,
 } from '../components/FitFinderModal';
+import { Model3DModal } from '../components/Model3DModal';
+import { hasProduct3DModel } from '../config/model3dConfig';
 
 const getColorHex = (colorName: string): string => {
   const c = colorName.toLowerCase();
@@ -37,6 +39,7 @@ export const ProductsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isFitFinderOpen, setIsFitFinderOpen] = useState(false);
   const [fitProfile, setFitProfile] = useState<FitProfile | null>(() => loadSavedFitProfile());
+  const [modal3DProduct, setModal3DProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     const syncProfile = () => setFitProfile(loadSavedFitProfile());
@@ -60,8 +63,15 @@ export const ProductsPage: React.FC = () => {
       }
     };
     loadProducts();
+    const handleUpdate = () => {
+      getProducts().then((data) => {
+        if (data && data.length > 0) setProducts(data);
+      });
+    };
+    window.addEventListener("technishop_products_updated", handleUpdate);
     return () => {
       isMounted = false;
+      window.removeEventListener("technishop_products_updated", handleUpdate);
     };
   }, []);
 
@@ -222,6 +232,20 @@ export const ProductsPage: React.FC = () => {
                           <span>Twój rozmiar: {fitProfile.recommendedSize}</span>
                         </span>
                       )}
+                    {hasProduct3DModel(product) && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setModal3DProduct(product);
+                        }}
+                        className="px-2.5 py-1 rounded-full text-[9px] font-black bg-slate-900/90 hover:bg-purple-900 text-yellow-300 shadow-sm border border-purple-400/40 flex items-center space-x-1 hover:scale-105 transition-all cursor-pointer"
+                        title="Otwórz interaktywny model 3D w 360°"
+                      >
+                        <Box className="w-3 h-3 text-yellow-300 animate-pulse" />
+                        <span>Podgląd 3D</span>
+                      </button>
+                    )}
                   </div>
 
                   {/* Wishlist Heart Button */}
@@ -302,9 +326,19 @@ export const ProductsPage: React.FC = () => {
                     <span className="text-lg font-black text-slate-900">
                       {product.price.toFixed(2)} <span className="text-xs font-bold">zł</span>
                     </span>
-                    <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
-                      Darmowa od 200 zł
-                    </span>
+                    {(product.stock ?? 0) === 0 ? (
+                      <span className="text-[10px] font-black text-red-700 bg-red-50 px-2 py-0.5 rounded-full border border-red-200">
+                        Wyprzedane
+                      </span>
+                    ) : (product.stock ?? 0) <= 10 ? (
+                      <span className="text-[10px] font-black text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                        Ostatnie {product.stock} szt.!
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
+                        Darmowa od 200 zł
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -312,10 +346,15 @@ export const ProductsPage: React.FC = () => {
                 <div className="pt-3.5">
                   <button
                     onClick={(e) => handleQuickAdd(e, product)}
-                    className="w-full py-2.5 px-3 rounded-xl font-black text-xs text-white bg-purple-600 hover:bg-purple-700 active:bg-purple-800 shadow-xs flex items-center justify-center space-x-1.5 transition-colors cursor-pointer"
+                    disabled={(product.stock ?? 0) === 0}
+                    className={`w-full py-2.5 px-3 rounded-xl font-black text-xs flex items-center justify-center space-x-1.5 transition-colors ${
+                      (product.stock ?? 0) === 0
+                        ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                        : "text-white bg-purple-600 hover:bg-purple-700 active:bg-purple-800 shadow-xs cursor-pointer"
+                    }`}
                   >
                     <ShoppingBag className="w-3.5 h-3.5" />
-                    <span>DODAJ DO KOSZYKA</span>
+                    <span>{(product.stock ?? 0) === 0 ? "BRAK W MAGAZYNIE" : "DODAJ DO KOSZYKA"}</span>
                   </button>
                 </div>
               </div>
@@ -327,6 +366,11 @@ export const ProductsPage: React.FC = () => {
       <FitFinderModal
         isOpen={isFitFinderOpen}
         onClose={() => setIsFitFinderOpen(false)}
+      />
+      <Model3DModal
+        product={modal3DProduct}
+        isOpen={!!modal3DProduct}
+        onClose={() => setModal3DProduct(null)}
       />
     </div>
   );
