@@ -6,7 +6,9 @@ Polityki RLS sprawdzają status konta i istnienie sesji po stronie bazy. Przywr�
 
 ## Wdrożenie
 
-Migracja `supabase/migrations/20261104203812_account_deactivation.sql` zakłada istniejący schemat TechniShop (`profiles`, `orders`, `cart_items`, `admin_users`, `Product`) i obecne polityki RLS. Nie jest kompletną migracją całej bazy. Przed wdrożeniem porównaj aktualny schemat, granty, polityki i inne punkty dostępu z migracją. Sprawdź też, czy nie dodano nowych tabel, polityk Storage ani funkcji serwerowych, które należy objąć tym samym zabezpieczeniem. Nie nadpisuj istniejących funkcji bez porównania ich aktualnego kodu.
+W projekcie produkcyjnym TechniShop migracja `20261104210428` oraz funkcje `deactivate-account` i `send-order-email` zostały wdrożone 4 listopada 2026 r. Migracji nie należy stosować ponownie w tym projekcie. Interfejs pozostaje w PR-ze #11 do czasu jego zmergowania i wdrożenia aplikacji.
+
+Migracja `supabase/migrations/20261104210428_account_deactivation.sql` zakłada istniejący schemat TechniShop (`profiles`, `orders`, `cart_items`, `admin_users`, `Product`) i obecne polityki RLS. Nie jest kompletną migracją całej bazy. Przed wdrożeniem porównaj aktualny schemat, granty, polityki i inne punkty dostępu z migracją. Sprawdź też, czy nie dodano nowych tabel, polityk Storage ani funkcji serwerowych, które należy objąć tym samym zabezpieczeniem. Nie nadpisuj istniejących funkcji bez porównania ich aktualnego kodu.
 
 1. W izolowanym środowisku sprawdź migrację i obie funkcje, w tym logowanie hasłem i OAuth, odświeżanie sesji, stare JWT, uprawnienia administratora i proces przywracania.
 2. Zaplanuj odwrócenie zmian i dostęp awaryjny. Upewnij się, że w Auth są dostępne sesje istniejących użytkowników: polityki wymagają prawidłowego `session_id` z JWT i rekordu w `auth.sessions`.
