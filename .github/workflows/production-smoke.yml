@@ -3,31 +3,71 @@ name: Production smoke tests
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
+    inputs:
+      promote:
+        description: 'Promote the tested main commit to prod after review'
+        type: boolean
+        required: true
+        default: false
 
 permissions:
   contents: write
 
+concurrency:
+  group: production-promotion
+  cancel-in-progress: false
+
 jobs:
   smoke:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+      TECHNISHOP_URL: http://127.0.0.1:4173
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: '3.12'
+      - name: Require Supabase configuration
+        run: |
+          test -n "$VITE_SUPABASE_URL" || { echo 'Missing VITE_SUPABASE_URL secret'; exit 1; }
+          test -n "$VITE_SUPABASE_PUBLISHABLE_KEY" || { echo 'Missing VITE_SUPABASE_PUBLISHABLE_KEY secret'; exit 1; }
+      - name: Build this commit
+        run: |
+          npm ci
+          npm run build
       - name: Install Playwright
         run: |
           python -m pip install -r tests/requirements.txt
           python -m playwright install --with-deps chromium
-      - name: Run production smoke tests
-        env:
-          TECHNISHOP_URL: https://technishop-frontend.vercel.app
-        run: python tests/production_smoke.py
-      - name: Promote tested commit to prod
+          python -m unittest discover -s tests -p 'test_*.py'
+      - name: Run smoke tests against this build and Supabase
         run: |
-          git fetch origin prod
+          npm run preview -- --host 127.0.0.1 --port 4173 --strictPort > /tmp/technishop-preview.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then break; fi
+            if ! kill -0 "$server_pid" 2>/dev/null; then cat /tmp/technishop-preview.log; exit 1; fi
+            sleep 1
+          done
+          curl --fail --silent http://127.0.0.1:4173/ > /dev/null || { cat /tmp/technishop-preview.log; exit 1; }
+          python tests/production_smoke.py
+      - name: Promote tested commit to prod
+        if: github.event_name == 'workflow_dispatch' && inputs.promote == true && github.ref == 'refs/heads/main'
+        run: |
+          git fetch origin main prod
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" || { echo 'Main advanced; refusing to promote stale commit'; exit 1; }
+          git merge-base --is-ancestor origin/prod HEAD || { echo 'prod is not an ancestor; refusing to overwrite it'; exit 1; }
           git push origin HEAD:prod
-
