@@ -369,15 +369,8 @@ export const createOrderApi = async (orderData: {
   items: CartItem[];
   phone?: string;
 }) => {
-  let user_id: string | null = null;
-  try {
-    user_id = await currentUserId();
-  } catch {}
-
-  let createdId: number | string = Date.now();
-
-  try {
-    const { data, error } = await supabase
+  const user_id = await currentUserId();
+  const { data, error } = await supabase
       .from('orders')
       .insert({
         user_id,
@@ -392,8 +385,9 @@ export const createOrderApi = async (orderData: {
       .select()
       .single();
 
-    if (!error && data) {
-      createdId = data.id;
+  if (error) throw error;
+  if (!data) throw new Error('Nie udało się zapisać zamówienia.');
+  try {
       const { error: emailError } = await supabase.functions.invoke('send-order-email', {
         body: {
           to: orderData.email,
@@ -404,53 +398,21 @@ export const createOrderApi = async (orderData: {
         },
       });
       if (emailError) console.warn('Nie udało się wysłać potwierdzenia zamówienia:', emailError);
-    }
   } catch (err) {
-    console.warn('Supabase createOrder fallback to local storage:', err);
+    console.warn('Nie udało się wysłać potwierdzenia zamówienia:', err);
   }
+  return data;
+};
 
-  // Zapis do bazy lokalnej (localStorage)
-  const currentOrders = getLocalStoredOrders();
-  const maxNumId = currentOrders.reduce((max, o) => {
-    const num = Number(o.id);
-    return !isNaN(num) && num > max ? num : max;
-  }, 1045);
-
-  const newOrder: Order = {
-    id: typeof createdId === 'number' ? createdId : maxNumId + 1,
-    customerName: orderData.name,
-    email: orderData.email,
-    address: orderData.address,
-    phone: orderData.phone || '+48 500 000 000',
-    paymentMethod: orderData.paymentMethod,
-    totalPrice: orderData.totalPrice,
-    status: 'PENDING',
-    createdAt: new Date().toISOString(),
-    items: orderData.items,
-  };
-
-  saveLocalOrders([newOrder, ...currentOrders]);
-
-  // Automatyczne zmniejszenie stanu magazynowego zamówionych produktów
-  try {
-    const allProducts = getLocalStoredProducts();
-    let modified = false;
-    for (const item of orderData.items) {
-      const prodIdx = allProducts.findIndex((p) => p.id === item.product.id);
-      if (prodIdx !== -1) {
-        const curStock = allProducts[prodIdx].stock ?? 0;
-        allProducts[prodIdx].stock = Math.max(0, curStock - item.quantity);
-        modified = true;
-      }
-    }
-    if (modified) {
-      saveLocalProducts(allProducts);
-    }
-  } catch (err) {
-    console.warn('Błąd aktualizacji zapasów po zamówieniu:', err);
-  }
-
-  return newOrder;
+export const getMyOrdersApi = async (): Promise<Order[]> => {
+  const userId = await currentUserId();
+  const { data, error } = await supabase.from('orders').select('*').eq('user_id', userId).order('createdAt', { ascending: false });
+  if (error) throw error;
+  return (data || []).map((row: any) => ({
+    id: row.id, customerName: row.customerName, email: row.email, address: row.address,
+    paymentMethod: row.paymentMethod, totalPrice: Number(row.totalPrice), status: row.status,
+    createdAt: row.createdAt, items: typeof row.items === 'string' ? JSON.parse(row.items) : row.items || [],
+  }));
 };
 
 export const updateOrderStatusApi = async (

@@ -38,6 +38,9 @@ export const CheckoutPage: React.FC = () => {
   const [blikCode, setBlikCode] = useState('');
   const [isOrdered, setIsOrdered] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [orderError, setOrderError] = useState('');
+  const [cartError, setCartError] = useState('');
+  const [orderedTotal, setOrderedTotal] = useState(0);
 
   const isFreeShipping = subtotalPrice >= 200 || isFreeShippingPromo;
   const deliveryCost = deliveryMethod === 'szkola' || isFreeShipping ? 0 : deliveryMethod === 'paczkomat' ? 14.99 : 16.99;
@@ -54,8 +57,8 @@ export const CheckoutPage: React.FC = () => {
         <h2 className="text-2xl font-black text-slate-900 tracking-tight">Zamówienie Złożone Pomyślnie!</h2>
         <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
           Dziękujemy, <strong className="text-slate-900">{name}</strong>! Twoje zamówienie na kwotę{' '}
-          <strong className="text-purple-700 font-mono text-base">{finalTotal.toFixed(2)} zł</strong> zostało
-          zapisane w systemie TechniShop. Potwierdzenie wysłaliśmy na adres <strong>{email}</strong>.
+          <strong className="text-purple-700 font-mono text-base">{orderedTotal.toFixed(2)} zł</strong> zostało
+          zapisane w systemie TechniShop.
         </p>
 
         <div className="p-4 bg-[#FAF8F5] border border-[#E3DDD2] rounded-2xl text-left text-xs space-y-2 text-slate-700 font-medium">
@@ -87,11 +90,9 @@ export const CheckoutPage: React.FC = () => {
           )}
         </div>
 
+        {cartError && <div role="alert" className="text-sm text-red-700"><p>{cartError}</p><button type="button" className="font-bold underline mt-2" onClick={() => void clearCart().then(() => setCartError('')).catch(() => setCartError('Nie udało się wyczyścić koszyka. Spróbuj ponownie.'))}>Spróbuj ponownie</button></div>}
         <button
-          onClick={() => {
-            clearCart();
-            window.location.href = '/';
-          }}
+          onClick={() => { window.location.href = '/'; }}
           className="px-8 py-3.5 text-xs font-black text-white bg-purple-600 hover:bg-purple-700 active:bg-purple-800 rounded-xl shadow-xs transition-colors cursor-pointer"
         >
           Wróć do sklepu głównego
@@ -116,7 +117,9 @@ export const CheckoutPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setIsSubmitting(true);
+    setOrderError('');
     try {
       await createOrderApi({
         name,
@@ -126,11 +129,14 @@ export const CheckoutPage: React.FC = () => {
         totalPrice: finalTotal,
         items: cart,
       });
+      setOrderedTotal(finalTotal);
+      setIsOrdered(true);
+      try { await clearCart(); } catch { setCartError('Zamówienie zostało zapisane, ale koszyk nie został wyczyszczony.'); }
     } catch (err) {
-      console.warn('Nie udało się zapisać zamówienia w bazie, kontynuuję:', err);
+      console.error('Nie udało się zapisać zamówienia:', err);
+      setOrderError('Nie udało się złożyć zamówienia. Sprawdź połączenie i upewnij się, że jesteś zalogowany.');
     } finally {
       setIsSubmitting(false);
-      setIsOrdered(true);
     }
   };
 
@@ -145,6 +151,7 @@ export const CheckoutPage: React.FC = () => {
       </div>
 
       <form onSubmit={handleSubmit}>
+        {orderError && <p role="alert" className="mb-4 rounded-xl bg-red-50 p-4 text-sm text-red-700">{orderError}</p>}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* LEFT COLUMN: Customer info, Delivery, Payment (7 cols) */}
           <div className="lg:col-span-7 space-y-6">

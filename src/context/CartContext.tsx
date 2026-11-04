@@ -9,6 +9,7 @@ import {
   validateCouponApi,
 } from '../services/api';
 import { useAuth } from './AuthContext';
+import { supabase } from '../lib/supabase';
 
 interface ApplyCouponResponse {
   success: boolean;
@@ -71,7 +72,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         setIsLoading(true);
         const data = await getCart();
-        if (data && Array.isArray(data.items) && data.items.length > 0) {
+        if (data && Array.isArray(data.items)) {
           setCart(data.items);
         }
       } catch (err) {
@@ -156,12 +157,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const clearCart = async () => {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) throw error;
+    if (data.session) await clearCartApi();
     setCart([]);
-    try {
-      if (isAuthenticated) await clearCartApi();
-    } catch (err) {
-      console.warn('Błąd czyszczenia koszyka w backendzie:', err);
-    }
+    setCoupon(null);
   };
 
   // Obliczenia finansowe i rabatowe
