@@ -12,6 +12,7 @@ import { CartPage } from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { AuthPage } from './pages/AuthPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { OrdersPage } from './pages/OrdersPage';
 import { AdminPage } from './pages/AdminPage';
 import { ShieldCheck } from 'lucide-react';
 
@@ -50,6 +51,7 @@ const AppLayout: React.FC = () => {
             <Route path="/register" element={<AuthPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/account" element={<SettingsPage />} />
+            <Route path="/orders" element={<OrdersPage />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/panel" element={<AdminPage />} />
           </Routes>

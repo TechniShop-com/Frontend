@@ -22,6 +22,7 @@ import {
   LogOut,
   MapPin,
   Phone,
+  Package,
 } from 'lucide-react';
 
 interface AvatarOption {
@@ -356,6 +357,8 @@ export const SettingsPage: React.FC = () => {
             <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 px-3 pb-2">
               Menu Ustawień
             </p>
+
+            <Link to="/orders" className="w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-sm font-bold text-slate-600 hover:text-purple-600 hover:bg-white/80"><Package className="w-5 h-5"/><span>Moje zamówienia</span></Link>
 
             <button
               onClick={() => setActiveTab('general')}
