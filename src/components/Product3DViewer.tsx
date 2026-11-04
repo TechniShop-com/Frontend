@@ -9,7 +9,6 @@ import {
   RotateCcw,
   Maximize2,
   Minimize2,
-  Sparkles,
   Loader2,
   Eye,
   AlertTriangle,
@@ -152,7 +151,7 @@ const Model: React.FC<ModelProps> = ({
                   }`}
                   title={hs.title}
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
+                  <Info className="w-3.5 h-3.5" />
                 </button>
 
                 {isActive && (

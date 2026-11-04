@@ -10,7 +10,6 @@ import {
   CreditCard,
   Building2,
   Clock,
-  Sparkles,
   Tag,
 } from 'lucide-react';
 import { createOrderApi } from '../services/api';
@@ -77,7 +76,6 @@ export const CheckoutPage: React.FC = () => {
           {coupon && (
             <div className="flex justify-between items-center bg-emerald-50/80 p-2 rounded-xl border border-emerald-200 text-emerald-900 font-bold">
               <span className="flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-yellow-500 fill-yellow-400" />
                 <span>Kod rabatowy ({coupon.code}):</span>
               </span>
               <span className="font-mono text-emerald-700">
@@ -476,7 +474,6 @@ export const CheckoutPage: React.FC = () => {
                 {coupon && discountAmount > 0 && (
                   <div className="flex justify-between items-center text-emerald-700 font-bold">
                     <span className="flex items-center gap-1">
-                      <Sparkles className="w-3.5 h-3.5 text-yellow-500 fill-yellow-400" />
                       <span>Rabat ({coupon.code}):</span>
                     </span>
                     <span className="font-mono">-{discountAmount.toFixed(2)} zł</span>

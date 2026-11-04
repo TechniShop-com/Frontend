@@ -9,11 +9,9 @@ import {
   Check,
   User,
   LogOut,
-  Sparkles,
   Heart,
   Zap,
   ArrowRight,
-  Flame,
   Package,
   Settings,
   ShieldCheck,
@@ -36,16 +34,9 @@ export const Navbar: React.FC<NavbarProps> = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [copiedCode, setCopiedCode] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const dropdownTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
-
-  const handleCopyPromo = (code: string) => {
-    navigator.clipboard.writeText(code);
-    setCopiedCode(true);
-    setTimeout(() => setCopiedCode(false), 2200);
-  };
 
   // Globalny skrót klawiszowy: Ctrl+K / Cmd+K otwiera wyszukiwarkę z dowolnego miejsca
   useEffect(() => {
@@ -134,29 +125,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
           : 'bg-[#EFECE4] border-[#E2DDD3]'
       }`}
     >
-      {/* Promo Announcement Banner */}
-      <div className="bg-gradient-to-r from-purple-700 via-indigo-700 to-purple-800 text-white text-[11px] py-1.5 px-4 text-center font-bold tracking-wide flex items-center justify-center gap-2 border-b border-purple-800/40 shadow-xs">
-        <span className="flex items-center gap-1.5 flex-wrap justify-center">
-          <Sparkles className="w-3.5 h-3.5 text-yellow-300 animate-pulse shrink-0" />
-          <span>
-            Promocja dla uczniów: Wpisz kod{' '}
-            <span className="font-mono bg-white/20 px-1.5 py-0.5 rounded text-yellow-300 font-extrabold tracking-wider border border-white/20">
-              TECHNI20
-            </span>{' '}
-            w koszyku i odbierz <strong className="text-yellow-200">-20% rabatu</strong>!
-          </span>
-        </span>
-        <button
-          type="button"
-          onClick={() => handleCopyPromo('TECHNI20')}
-          className="ml-1 sm:ml-2 px-2 py-0.5 bg-white/15 hover:bg-white/25 active:scale-95 rounded text-[10px] uppercase font-black tracking-wider transition-all cursor-pointer border border-white/20 shrink-0"
-          title="Kopiuj kod rabatowy"
-        >
-          {copiedCode ? '✓ Skopiowano!' : 'Kopiuj'}
-        </button>
-      </div>
-
-      <div className="w-full px-4 sm:px-8 lg:px-12 py-3 flex items-center justify-between gap-4">
+      <div className="relative w-full px-4 sm:px-8 lg:px-12 py-3 flex items-center justify-between gap-4">
         {/* Brand Logo */}
         <Link to="/" className="shrink-0">
           <Logo size="md" />
@@ -164,7 +133,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
 
 
         {/* Center Navigation Links & Produkty Dropdown */}
-        <div className="hidden md:flex items-center space-x-6 text-sm font-extrabold">
+        <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center space-x-6 text-sm font-extrabold">
           <Link
             to="/"
             className={`transition-all duration-200 hover:scale-105 ${
@@ -232,7 +201,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
                     >
                       <div className="flex items-center space-x-3">
                         <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 group-hover:bg-purple-600 group-hover:text-white transition-all duration-200">
-                          <Sparkles className="w-4 h-4" />
+                          <Package className="w-4 h-4" />
                         </div>
                         <div>
                           <div className="font-extrabold text-xs text-slate-800 group-hover:text-purple-700 transition-colors">
@@ -348,7 +317,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
 
                       <div className="relative z-10 flex items-center justify-between">
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-600 text-white shadow-sm flex items-center gap-1">
-                          <Flame className="w-3 h-3 text-yellow-300" /> Bestseller
+                          Bestseller
                         </span>
                       </div>
 
@@ -380,7 +349,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
           <button
             type="button"
             onClick={() => setIsSearchOpen(true)}
-            className="relative hidden sm:flex items-center justify-between w-48 lg:w-64 pl-9 pr-2.5 py-2 text-xs bg-[#E4DFD5] hover:bg-white text-slate-500 hover:text-slate-800 font-medium rounded-full border border-[#DDD8CD] hover:border-purple-400 focus:outline-none shadow-2xs hover:shadow-xs transition-all duration-200 cursor-pointer group text-left"
+            className="relative hidden xl:flex items-center justify-between w-64 pl-9 pr-2.5 py-2 text-xs bg-[#E4DFD5] hover:bg-white text-slate-500 hover:text-slate-800 font-medium rounded-full border border-[#DDD8CD] hover:border-purple-400 focus:outline-none shadow-2xs hover:shadow-xs transition-all duration-200 cursor-pointer group text-left"
           >
             <Search className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 group-hover:text-purple-600 transition-colors pointer-events-none" />
             <span className="truncate">Szukaj produktów...</span>
@@ -389,11 +358,11 @@ export const Navbar: React.FC<NavbarProps> = () => {
             </kbd>
           </button>
 
-          {/* Mobile Search Button */}
+          {/* Compact search button for narrower screens */}
           <button
             type="button"
             onClick={() => setIsSearchOpen(true)}
-            className="sm:hidden flex items-center justify-center w-9 h-9 rounded-full bg-[#E4DFD5] hover:bg-[#DDD8CD] text-slate-700 hover:text-purple-600 border border-[#DDD8CD] shadow-xs transition-all duration-200 cursor-pointer"
+            className="flex xl:hidden items-center justify-center w-9 h-9 rounded-full bg-[#E4DFD5] hover:bg-[#DDD8CD] text-slate-700 hover:text-purple-600 border border-[#DDD8CD] shadow-xs transition-all duration-200 cursor-pointer"
             title="Szukaj produktów"
           >
             <Search className="w-4 h-4" />

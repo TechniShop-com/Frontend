@@ -12,7 +12,6 @@ import {
   Truck,
   Check,
   ShieldCheck,
-  Sparkles,
 } from 'lucide-react';
 
 export const CartDrawer: React.FC = () => {
@@ -43,13 +42,11 @@ export const CartDrawer: React.FC = () => {
 
   // Lock body scroll when drawer is open
   useEffect(() => {
-    if (isCartDrawerOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
+    if (!isCartDrawerOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = previousOverflow;
     };
   }, [isCartDrawerOpen]);
 
@@ -66,7 +63,7 @@ export const CartDrawer: React.FC = () => {
   const originalTotalWithShipping = subtotalPrice + (subtotalPrice >= freeShippingThreshold ? 0 : 14.99);
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
+    <div className="fixed inset-0 z-[100] overflow-hidden">
       {/* Dimmed backdrop */}
       <div
         onClick={closeCartDrawer}
@@ -216,7 +213,6 @@ export const CartDrawer: React.FC = () => {
                 {coupon && discountAmount > 0 && (
                   <div className="flex justify-between items-center text-emerald-700 font-bold">
                     <span className="flex items-center gap-1">
-                      <Sparkles className="w-3.5 h-3.5 text-yellow-500 fill-yellow-400" />
                       <span>Rabat ({coupon.code}):</span>
                     </span>
                     <span className="font-mono">-{discountAmount.toFixed(2)} zł</span>

@@ -4,8 +4,6 @@ import {
   Search,
   X,
   ArrowRight,
-  Sparkles,
-  Flame,
   CornerDownLeft,
   ShoppingBag,
   Clock,
@@ -229,7 +227,6 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
                 {/* Popularne wyszukiwania */}
                 <div>
                   <div className="flex items-center space-x-2 text-xs font-black text-purple-700 uppercase tracking-wider mb-3">
-                    <Flame className="w-4 h-4 text-amber-500" />
                     <span>Popularne wyszukiwania</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -252,7 +249,6 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
                 {/* Polecane produkty / Bestsellery */}
                 <div className="pt-2 border-t border-[#EAE4D9]">
                   <div className="flex items-center space-x-2 text-xs font-black text-slate-700 uppercase tracking-wider mb-3">
-                    <Sparkles className="w-4 h-4 text-purple-600" />
                     <span>Polecane Bestsellery Techni</span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

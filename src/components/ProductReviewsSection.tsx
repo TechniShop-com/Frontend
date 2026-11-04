@@ -10,7 +10,6 @@ import {
   Filter,
   ArrowUpDown,
   GraduationCap,
-  Sparkles,
   Loader2,
   X,
   AlertCircle,
@@ -279,7 +278,7 @@ export const ProductReviewsSection: React.FC<ProductReviewsSectionProps> = ({
           <div className="flex items-center justify-between pb-3 border-b border-[#EAE4D9]">
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold">
-                <Sparkles className="w-4 h-4" />
+                <MessageSquarePlus className="w-4 h-4" />
               </div>
               <div>
                 <h4 className="font-black text-sm text-slate-900">

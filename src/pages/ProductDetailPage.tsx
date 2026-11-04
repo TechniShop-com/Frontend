@@ -22,7 +22,6 @@ import {
   ChevronRight,
   Ruler,
   Clock,
-  Sparkles,
   UserCheck,
   Image as ImageIcon,
   Loader2,
@@ -148,7 +147,6 @@ export const ProductDetailPage: React.FC = () => {
                         : 'bg-[#FAF7F2] text-slate-700 hover:bg-purple-50 hover:text-purple-700'
                     }`}
                   >
-                    <Sparkles className="w-3.5 h-3.5 text-yellow-300 animate-pulse" />
                     <span>Model 3D 360°</span>
                   </button>
 
@@ -324,7 +322,6 @@ export const ProductDetailPage: React.FC = () => {
                     onClick={() => setIsFitFinderOpen(true)}
                     className="px-3 py-1 rounded-full text-[11px] font-black bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 shadow-xs flex items-center space-x-1.5 transition-all cursor-pointer"
                   >
-                    <Sparkles className="w-3 h-3 text-yellow-300" />
                     <span>Asystent Rozmiaru FitFinder</span>
                   </button>
                 )}
