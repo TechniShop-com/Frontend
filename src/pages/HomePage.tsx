@@ -11,9 +11,6 @@ import {
   ArrowRight,
   Loader2,
   Heart,
-  Truck,
-  RotateCcw,
-  ShieldCheck,
   Ruler,
   UserCheck,
 } from 'lucide-react';
@@ -121,51 +118,6 @@ export const HomePage: React.FC<HomePageProps> = () => {
       {/* HERO BANNER SLIDER WITH OVERLAY TEXT */}
       <section className="w-[95%] mx-auto pt-6">
         <HeroSlider />
-      </section>
-
-      {/* POLISH TRUST & VALUE STRIP (Reserved / Zalando / Cropp standard) */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-5 sm:p-6 bg-white border border-[#E7E2D8] rounded-3xl shadow-xs">
-          <div className="flex items-center space-x-3.5">
-            <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-700 flex items-center justify-center shrink-0 border border-purple-200">
-              <Truck className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="text-xs font-black text-slate-900">Darmowa dostawa</div>
-              <div className="text-[11px] text-slate-500 font-medium">Do Paczkomatu od 200 zł</div>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-3.5">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 border border-emerald-200">
-              <RotateCcw className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="text-xs font-black text-slate-900">14 dni na zwrot</div>
-              <div className="text-[11px] text-slate-500 font-medium">Bez zbędnych formalności</div>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-3.5">
-            <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0 border border-indigo-200">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="text-xs font-black text-slate-900">Płatność BLIK & PayPo</div>
-              <div className="text-[11px] text-slate-500 font-medium">Kup teraz, zapłać za 30 dni</div>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-3.5">
-            <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0 border border-amber-200">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="text-xs font-black text-slate-900">Gramatura 380g/m²</div>
-              <div className="text-[11px] text-slate-500 font-medium">Gruba bawełna i trwały haft</div>
-            </div>
-          </div>
-        </div>
       </section>
 
       {/* QUICK NOTICE TOAST */}

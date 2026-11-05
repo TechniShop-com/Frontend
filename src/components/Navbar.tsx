@@ -345,24 +345,27 @@ export const Navbar: React.FC<NavbarProps> = () => {
 
         {/* Right Search Input, Cart Trigger & User Auth Avatar */}
         <div className="flex items-center space-x-3.5 sm:space-x-5 lg:space-x-6">
-          {/* Modern Sleek Live Search Trigger */}
-          <button
-            type="button"
-            onClick={() => setIsSearchOpen(true)}
-            className="relative hidden xl:flex items-center justify-between w-64 pl-9 pr-2.5 py-2 text-xs bg-[#E4DFD5] hover:bg-white text-slate-500 hover:text-slate-800 font-medium rounded-full border border-[#DDD8CD] hover:border-purple-400 focus:outline-none shadow-2xs hover:shadow-xs transition-all duration-200 cursor-pointer group text-left"
-          >
-            <Search className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 group-hover:text-purple-600 transition-colors pointer-events-none" />
-            <span className="truncate">Szukaj produktów...</span>
-            <kbd className="hidden lg:inline-flex items-center gap-0.5 px-2 py-0.5 text-[10px] font-extrabold text-slate-500 bg-white/80 group-hover:bg-purple-100 group-hover:text-purple-700 rounded-md border border-[#DDD8CD] transition-colors shadow-2xs">
-              Ctrl K
-            </kbd>
-          </button>
+          {/* Wide search trigger on other pages */}
+          {location.pathname !== '/' && (
+            <button
+              type="button"
+              onClick={() => setIsSearchOpen(true)}
+              className="relative hidden xl:flex items-center justify-between w-64 pl-9 pr-2.5 py-2 text-xs bg-[#E4DFD5] hover:bg-white text-slate-500 hover:text-slate-800 font-medium rounded-full border border-[#DDD8CD] hover:border-purple-400 focus:outline-none shadow-2xs hover:shadow-xs transition-all duration-200 cursor-pointer group text-left"
+            >
+              <Search className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 group-hover:text-purple-600 transition-colors pointer-events-none" />
+              <span className="truncate">Szukaj produktów...</span>
+              <kbd className="hidden lg:inline-flex items-center gap-0.5 px-2 py-0.5 text-[10px] font-extrabold text-slate-500 bg-white/80 group-hover:bg-purple-100 group-hover:text-purple-700 rounded-md border border-[#DDD8CD] transition-colors shadow-2xs">
+                Ctrl K
+              </kbd>
+            </button>
+          )}
 
-          {/* Compact search button for narrower screens */}
+          {/* Compact search button on the home page and narrower screens */}
           <button
             type="button"
             onClick={() => setIsSearchOpen(true)}
-            className="flex xl:hidden items-center justify-center w-9 h-9 rounded-full bg-[#E4DFD5] hover:bg-[#DDD8CD] text-slate-700 hover:text-purple-600 border border-[#DDD8CD] shadow-xs transition-all duration-200 cursor-pointer"
+            className={`flex ${location.pathname === '/' ? '' : 'xl:hidden'} items-center justify-center w-9 h-9 rounded-full bg-[#E4DFD5] hover:bg-[#DDD8CD] text-slate-700 hover:text-purple-600 border border-[#DDD8CD] shadow-xs transition-all duration-200 cursor-pointer`}
+            aria-label="Szukaj produktów"
             title="Szukaj produktów"
           >
             <Search className="w-4 h-4" />
