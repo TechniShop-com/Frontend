@@ -8,17 +8,13 @@ on:
   workflow_dispatch:
     inputs:
       promote:
-        description: 'Promote the tested main commit to prod after review'
+        description: 'Promote this tested main commit to prod'
         type: boolean
         required: true
         default: false
 
 permissions:
-  contents: write
-
-concurrency:
-  group: production-promotion
-  cancel-in-progress: false
+  contents: read
 
 jobs:
   smoke:
@@ -31,7 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -64,10 +60,43 @@ jobs:
           done
           curl --fail --silent http://127.0.0.1:4173/ > /dev/null || { cat /tmp/technishop-preview.log; exit 1; }
           python tests/production_smoke.py
-      - name: Promote tested commit to prod
-        if: github.event_name == 'workflow_dispatch' && inputs.promote == true && github.ref == 'refs/heads/main'
+  promote:
+    needs: smoke
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.promote == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    concurrency:
+      group: production-promotion
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Create repository-scoped GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.PRODUCTION_PROMOTION_APP_CLIENT_ID }}
+          private-key: ${{ secrets.PRODUCTION_PROMOTION_APP_PRIVATE_KEY }}
+          permission-contents: write
+      - name: Push the tested main commit to production
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          git fetch origin main prod
-          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" || { echo 'Main advanced; refusing to promote stale commit'; exit 1; }
-          git merge-base --is-ancestor origin/prod HEAD || { echo 'prod is not an ancestor; refusing to overwrite it'; exit 1; }
-          git push origin HEAD:prod
+          set -euo pipefail
+          gh auth setup-git --hostname github.com --force
+          git fetch --no-tags origin \
+            +refs/heads/main:refs/remotes/origin/main \
+            +refs/heads/prod:refs/remotes/origin/prod
+          if [ "$(git rev-parse refs/remotes/origin/main)" != "$GITHUB_SHA" ]; then
+            echo 'Main advanced after this run started; run the workflow again to promote it.'
+            exit 1
+          fi
+          git merge-base --is-ancestor refs/remotes/origin/prod "$GITHUB_SHA" || {
+            echo 'Production is not an ancestor of the tested commit; refusing a non-fast-forward update.'
+            exit 1
+          }
+          git push origin "$GITHUB_SHA:refs/heads/prod"
