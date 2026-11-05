@@ -368,7 +368,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
             aria-label="Szukaj produktów"
             title="Szukaj produktów"
           >
-            <Search className="w-4 h-4" />
+            <Search className="w-3.5 h-3.5" />
           </button>
 
           {/* Cart Button */}
@@ -377,7 +377,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
             className="relative flex shrink-0 items-center justify-center w-10 h-10 rounded-full bg-[#E4DFD5] hover:bg-[#DDD8CD] text-slate-700 hover:text-purple-600 border border-[#DDD8CD] hover:border-purple-300 shadow-xs hover:shadow transition-all duration-200 group active:scale-95 cursor-pointer"
             title="Otwórz koszyk"
           >
-            <ShoppingBag className="w-4 h-4 text-slate-700 group-hover:text-purple-600 group-hover:scale-105 transition-all" />
+            <ShoppingBag className="w-3.5 h-3.5 text-slate-700 group-hover:text-purple-600 group-hover:scale-105 transition-all" />
             {totalCount > 0 && (
               <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-purple-600 text-white font-extrabold text-[10px] rounded-full flex items-center justify-center shadow-xs ring-2 ring-[#EFECE4]">
                 {totalCount}
