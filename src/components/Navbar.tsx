@@ -364,7 +364,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
           <button
             type="button"
             onClick={() => setIsSearchOpen(true)}
-            className={`flex ${location.pathname === '/' ? '' : 'xl:hidden'} shrink-0 items-center justify-center w-10 h-10 rounded-full bg-[#E4DFD5] hover:bg-[#DDD8CD] text-slate-700 hover:text-purple-600 border border-[#DDD8CD] shadow-xs transition-all duration-200 cursor-pointer`}
+            className={`flex ${location.pathname === '/' ? '' : 'xl:hidden'} shrink-0 items-center justify-center w-9 h-9 rounded-full bg-[#E4DFD5] hover:bg-[#DDD8CD] text-slate-700 hover:text-purple-600 border border-[#DDD8CD] shadow-xs transition-all duration-200 cursor-pointer`}
             aria-label="Szukaj produktów"
             title="Szukaj produktów"
           >
@@ -374,7 +374,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
           {/* Cart Button */}
           <button
             onClick={openCartDrawer}
-            className="relative flex shrink-0 items-center justify-center w-10 h-10 rounded-full bg-[#E4DFD5] hover:bg-[#DDD8CD] text-slate-700 hover:text-purple-600 border border-[#DDD8CD] hover:border-purple-300 shadow-xs hover:shadow transition-all duration-200 group active:scale-95 cursor-pointer"
+            className="relative flex shrink-0 items-center justify-center w-9 h-9 rounded-full bg-[#E4DFD5] hover:bg-[#DDD8CD] text-slate-700 hover:text-purple-600 border border-[#DDD8CD] hover:border-purple-300 shadow-xs hover:shadow transition-all duration-200 group active:scale-95 cursor-pointer"
             title="Otwórz koszyk"
           >
             <ShoppingBag className="w-3.5 h-3.5 text-slate-700 group-hover:text-purple-600 group-hover:scale-105 transition-all" />
