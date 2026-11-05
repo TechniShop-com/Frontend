@@ -125,9 +125,9 @@ export const Navbar: React.FC<NavbarProps> = () => {
           : 'bg-[#EFECE4] border-[#E2DDD3]'
       }`}
     >
-      <div className="relative w-full px-4 sm:px-8 lg:px-12 py-3 flex items-center justify-between gap-4">
+      <div className="relative w-full px-4 sm:px-8 lg:px-12 py-3 flex items-center justify-between gap-2 sm:gap-4">
         {/* Brand Logo */}
-        <Link to="/" className="shrink-0">
+        <Link to="/" className="shrink-0 [&_svg]:h-6 [&_svg]:w-6 [&_span]:text-sm sm:[&_svg]:h-9 sm:[&_svg]:w-9 sm:[&_span]:text-xl">
           <Logo size="md" />
         </Link>
 
@@ -344,37 +344,40 @@ export const Navbar: React.FC<NavbarProps> = () => {
         </div>
 
         {/* Right Search Input, Cart Trigger & User Auth Avatar */}
-        <div className="flex items-center space-x-3.5 sm:space-x-5 lg:space-x-6">
-          {/* Modern Sleek Live Search Trigger */}
-          <button
-            type="button"
-            onClick={() => setIsSearchOpen(true)}
-            className="relative hidden xl:flex items-center justify-between w-64 pl-9 pr-2.5 py-2 text-xs bg-[#E4DFD5] hover:bg-white text-slate-500 hover:text-slate-800 font-medium rounded-full border border-[#DDD8CD] hover:border-purple-400 focus:outline-none shadow-2xs hover:shadow-xs transition-all duration-200 cursor-pointer group text-left"
-          >
-            <Search className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 group-hover:text-purple-600 transition-colors pointer-events-none" />
-            <span className="truncate">Szukaj produktów...</span>
-            <kbd className="hidden lg:inline-flex items-center gap-0.5 px-2 py-0.5 text-[10px] font-extrabold text-slate-500 bg-white/80 group-hover:bg-purple-100 group-hover:text-purple-700 rounded-md border border-[#DDD8CD] transition-colors shadow-2xs">
-              Ctrl K
-            </kbd>
-          </button>
+        <div className="flex items-center space-x-2.5 sm:space-x-3">
+          {/* Wide search trigger on other pages */}
+          {location.pathname !== '/' && (
+            <button
+              type="button"
+              onClick={() => setIsSearchOpen(true)}
+              className="relative hidden xl:flex items-center justify-between w-64 pl-9 pr-2.5 py-2 text-xs bg-[#E4DFD5] hover:bg-white text-slate-500 hover:text-slate-800 font-medium rounded-full border border-[#DDD8CD] hover:border-purple-400 focus:outline-none shadow-2xs hover:shadow-xs transition-all duration-200 cursor-pointer group text-left"
+            >
+              <Search className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 group-hover:text-purple-600 transition-colors pointer-events-none" />
+              <span className="truncate">Szukaj produktów...</span>
+              <kbd className="hidden lg:inline-flex items-center gap-0.5 px-2 py-0.5 text-[10px] font-extrabold text-slate-500 bg-white/80 group-hover:bg-purple-100 group-hover:text-purple-700 rounded-md border border-[#DDD8CD] transition-colors shadow-2xs">
+                Ctrl K
+              </kbd>
+            </button>
+          )}
 
-          {/* Compact search button for narrower screens */}
+          {/* Compact search button on the home page and narrower screens */}
           <button
             type="button"
             onClick={() => setIsSearchOpen(true)}
-            className="flex xl:hidden items-center justify-center w-9 h-9 rounded-full bg-[#E4DFD5] hover:bg-[#DDD8CD] text-slate-700 hover:text-purple-600 border border-[#DDD8CD] shadow-xs transition-all duration-200 cursor-pointer"
+            className={`flex ${location.pathname === '/' ? '' : 'xl:hidden'} shrink-0 items-center justify-center w-9 h-9 rounded-full bg-[#E4DFD5] hover:bg-[#DDD8CD] text-slate-700 hover:text-purple-600 border border-[#DDD8CD] shadow-xs transition-all duration-200 cursor-pointer`}
+            aria-label="Szukaj produktów"
             title="Szukaj produktów"
           >
-            <Search className="w-4 h-4" />
+            <Search className="w-3.5 h-3.5" />
           </button>
 
           {/* Cart Button */}
           <button
             onClick={openCartDrawer}
-            className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#E4DFD5] hover:bg-[#DDD8CD] text-slate-700 hover:text-purple-600 border border-[#DDD8CD] hover:border-purple-300 shadow-xs hover:shadow transition-all duration-200 group active:scale-95 cursor-pointer"
+            className="relative flex shrink-0 items-center justify-center w-9 h-9 rounded-full bg-[#E4DFD5] hover:bg-[#DDD8CD] text-slate-700 hover:text-purple-600 border border-[#DDD8CD] hover:border-purple-300 shadow-xs hover:shadow transition-all duration-200 group active:scale-95 cursor-pointer"
             title="Otwórz koszyk"
           >
-            <ShoppingBag className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-slate-700 group-hover:text-purple-600 group-hover:scale-105 transition-all" />
+            <ShoppingBag className="w-3.5 h-3.5 text-slate-700 group-hover:text-purple-600 group-hover:scale-105 transition-all" />
             {totalCount > 0 && (
               <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-purple-600 text-white font-extrabold text-[10px] rounded-full flex items-center justify-center shadow-xs ring-2 ring-[#EFECE4]">
                 {totalCount}
@@ -386,10 +389,11 @@ export const Navbar: React.FC<NavbarProps> = () => {
           {!user ? (
             <Link
               to="/login"
-              className="flex items-center space-x-1.5 px-3.5 sm:px-4 py-2 rounded-full font-bold text-xs text-white bg-purple-600 hover:bg-purple-700 active:bg-purple-800 shadow-xs transition-colors cursor-pointer"
+              className="flex shrink-0 items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-full font-bold text-xs text-white bg-purple-600 hover:bg-purple-700 active:bg-purple-800 shadow-xs transition-colors cursor-pointer"
+              aria-label="Zaloguj się"
             >
               <User className="w-3.5 h-3.5 text-purple-200" />
-              <span>Zaloguj się</span>
+              <span className="hidden min-[375px]:inline">Zaloguj się</span>
             </Link>
           ) : (
             <div className="relative" ref={userMenuRef}>
