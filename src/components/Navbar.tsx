@@ -15,6 +15,8 @@ import {
   Package,
   Settings,
   ShieldCheck,
+  GraduationCap,
+  Laptop,
 } from 'lucide-react';
 import { Logo } from './Logo';
 import { SearchModal } from './SearchModal';
@@ -133,11 +135,25 @@ export const Navbar: React.FC<NavbarProps> = () => {
 
 
         {/* Center Navigation Links & Produkty Dropdown */}
-        <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center space-x-6 text-sm font-extrabold">
+        <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center space-x-4 lg:space-x-6 text-xs lg:text-sm font-extrabold whitespace-nowrap">
+          {/* Techni Schools - Lewa strona grupy */}
+          <Link
+            to="/products?brand=techni-schools"
+            className={`transition-all duration-200 hover:scale-105 flex items-center space-x-1.5 ${
+              searchParams.get('brand') === 'techni-schools'
+                ? 'text-purple-700 font-black'
+                : 'text-slate-700 hover:text-purple-600'
+            }`}
+          >
+            <GraduationCap className="w-4 h-4 text-purple-600" />
+            <span>Techni Schools</span>
+          </Link>
+
+          {/* Strona Główna */}
           <Link
             to="/"
             className={`transition-all duration-200 hover:scale-105 ${
-              location.pathname === '/' && activeCategory === 'all' && !searchParams.get('search')
+              location.pathname === '/' && activeCategory === 'all' && !searchParams.get('search') && !searchParams.get('brand')
                 ? 'text-purple-700 font-black'
                 : 'text-slate-700 hover:text-purple-600'
             }`}
@@ -188,6 +204,38 @@ export const Navbar: React.FC<NavbarProps> = () => {
                     <div className="flex items-center justify-between px-2 pb-2 mb-1 border-b border-[#EAE4D9]">
                       <span className="text-[10px] font-black uppercase tracking-wider text-purple-700">Kolekcje & Asortyment</span>
                       <span className="text-[10px] font-bold text-slate-500 bg-[#EFECE4] px-2 py-0.5 rounded-full">Techni 2026</span>
+                    </div>
+
+                    {/* Szybki podział na sekcje */}
+                    <div className="grid grid-cols-2 gap-1.5 pb-2 mb-1 border-b border-[#EAE4D9]">
+                      <button
+                        onClick={() => {
+                          setIsDropdownOpen(false);
+                          navigate('/products?brand=techni-schools');
+                        }}
+                        className={`flex items-center space-x-2 p-2 rounded-xl text-left font-extrabold text-xs transition-colors cursor-pointer ${
+                          searchParams.get('brand') === 'techni-schools'
+                            ? 'bg-purple-100 text-purple-700 ring-1 ring-purple-400/30'
+                            : 'bg-white hover:bg-purple-50 text-slate-700 hover:text-purple-700'
+                        }`}
+                      >
+                        <GraduationCap className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                        <span className="truncate text-[11px]">Techni Schools</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsDropdownOpen(false);
+                          navigate('/products?brand=techni-zdalni');
+                        }}
+                        className={`flex items-center space-x-2 p-2 rounded-xl text-left font-extrabold text-xs transition-colors cursor-pointer ${
+                          searchParams.get('brand') === 'techni-zdalni'
+                            ? 'bg-indigo-100 text-indigo-700 ring-1 ring-indigo-400/30'
+                            : 'bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-700'
+                        }`}
+                      >
+                        <Laptop className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                        <span className="truncate text-[11px]">Techni Zdalni</span>
+                      </button>
                     </div>
 
                     {/* Wszystkie produkty */}
@@ -341,6 +389,19 @@ export const Navbar: React.FC<NavbarProps> = () => {
             </div>
             )}
           </div>
+
+          {/* Techni Zdalni - Prawa strona grupy */}
+          <Link
+            to="/products?brand=techni-zdalni"
+            className={`transition-all duration-200 hover:scale-105 flex items-center space-x-1.5 ${
+              searchParams.get('brand') === 'techni-zdalni'
+                ? 'text-indigo-600 font-black'
+                : 'text-slate-700 hover:text-indigo-600'
+            }`}
+          >
+            <Laptop className="w-4 h-4 text-indigo-600" />
+            <span>Techni Zdalni</span>
+          </Link>
         </div>
 
         {/* Right Search Input, Cart Trigger & User Auth Avatar */}

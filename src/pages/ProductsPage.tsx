@@ -28,6 +28,7 @@ export const ProductsPage: React.FC = () => {
   const { addToCart } = useCart();
 
   const categoryParam = searchParams.get('category') || 'all';
+  const brandParam = searchParams.get('brand') || 'all';
   const querySearch = searchParams.get('search') || '';
   const [sortBy] = useState<'default' | 'price-asc' | 'price-desc'>('default');
   const [quickNotice, setQuickNotice] = useState<string | null>(null);
@@ -86,12 +87,19 @@ export const ProductsPage: React.FC = () => {
           p.title.toLowerCase().includes('czapka');
       }
 
+      let matchesBrand = true;
+      if (brandParam === 'techni-schools') {
+        matchesBrand = p.brand === 'TECHNI_SCHOOLS';
+      } else if (brandParam === 'techni-zdalni') {
+        matchesBrand = p.brand === 'TECHNI_ZDALNI';
+      }
+
       const matchesQuery =
         !querySearch ||
         p.title.toLowerCase().includes(querySearch.toLowerCase()) ||
         p.description.toLowerCase().includes(querySearch.toLowerCase());
 
-      return matchesCategory && matchesQuery;
+      return matchesCategory && matchesBrand && matchesQuery;
     });
 
     if (sortBy === 'price-asc') {
@@ -101,7 +109,7 @@ export const ProductsPage: React.FC = () => {
     }
 
     return result;
-  }, [products, categoryParam, querySearch, sortBy]);
+  }, [products, categoryParam, brandParam, querySearch, sortBy]);
 
   const handleCategorySelect = (cat: string) => {
     if (cat === 'all') {
