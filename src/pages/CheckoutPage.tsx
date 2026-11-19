@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { PromoCodeBox } from '../components/PromoCodeBox';
+import { UnavailableCartNotice } from '../components/UnavailableCartNotice';
 import {
   ArrowRight,
   CheckCircle2,
@@ -26,6 +27,8 @@ export const CheckoutPage: React.FC = () => {
     coupon,
     isFreeShippingPromo,
     clearCart,
+    refreshCart,
+    unavailableCount,
   } = useCart();
 
   const [name, setName] = useState('');
@@ -104,7 +107,8 @@ export const CheckoutPage: React.FC = () => {
   if (cart.length === 0) {
     return (
       <div className="max-w-xl mx-auto p-8 text-center bg-white border border-[#E7E2D8] rounded-3xl my-12 text-slate-900 shadow-xs">
-        <p className="text-sm font-bold text-slate-600">Twój koszyk jest pusty.</p>
+        <UnavailableCartNotice />
+        <p className="mt-4 text-sm font-bold text-slate-600">{unavailableCount ? 'Brak dostępnych produktów w koszyku.' : 'Twój koszyk jest pusty.'}</p>
         <a
           href="/products"
           className="mt-4 inline-block px-5 py-2.5 bg-purple-600 text-white rounded-xl text-xs font-bold"
@@ -121,20 +125,59 @@ export const CheckoutPage: React.FC = () => {
     setIsSubmitting(true);
     setOrderError('');
     try {
+      // Re-read the saved cart and current product records before accepting the
+      // displayed total. This is not an atomic stock reservation.
+      let fresh: Awaited<ReturnType<typeof refreshCart>>;
+      try { fresh = await refreshCart(); }
+      catch {
+        setOrderError('Nie udało się odświeżyć koszyka i sprawdzić dostępności produktów. Sprawdź połączenie oraz zalogowanie, a następnie spróbuj ponownie.');
+        return;
+      }
+      if (fresh.unavailableIds.length) {
+        setOrderError('Część produktów jest niedostępna. Usuń je z koszyka, aby kontynuować.');
+        return;
+      }
+      const signature = (items: typeof cart) => items.map(item => [item.id, item.product.id, item.selectedColor, item.selectedSize, item.quantity, Number(item.product.price)].join('|')).sort().join('\n');
+      if (!fresh.items.length || signature(fresh.items) !== signature(cart)) {
+        setOrderError('Koszyk lub ceny zmieniły się. Sprawdź aktualne podsumowanie przed złożeniem zamówienia.');
+        return;
+      }
+      const quantities = new Map<string, number>();
+      for (const item of fresh.items) {
+        if (!Number.isInteger(item.quantity) || item.quantity < 1 || !Number.isFinite(Number(item.product.price)) || Number(item.product.price) < 0) {
+          setOrderError('Nie udało się potwierdzić ilości lub ceny produktu. Sprawdź koszyk przed złożeniem zamówienia.');
+          return;
+        }
+        quantities.set(item.product.id, (quantities.get(item.product.id) || 0) + item.quantity);
+      }
+      for (const item of fresh.items) {
+        if (item.product.stock == null) {
+          setOrderError(`Nie można potwierdzić dostępności produktu „${item.product.title}”. Spróbuj później lub skontaktuj się ze sklepem.`);
+          return;
+        }
+        if ((quantities.get(item.product.id) || 0) > item.product.stock) {
+          setOrderError(`Niewystarczający stan produktu „${item.product.title}”. Zmień ilość w koszyku.`);
+          return;
+        }
+        if ((Array.isArray(item.product.colors) && item.product.colors.length > 0 && !item.product.colors.includes(item.selectedColor)) || (Array.isArray(item.product.sizes) && item.product.sizes.length > 0 && !item.product.sizes.includes(item.selectedSize))) {
+          setOrderError(`Wybrany wariant produktu „${item.product.title}” jest niedostępny. Usuń go z koszyka i wybierz aktualny wariant.`);
+          return;
+        }
+      }
       await createOrderApi({
         name,
         email,
         address: deliveryMethod === 'paczkomat' ? `Paczkomat: ${paczkomatCode}` : address,
         paymentMethod: `${paymentMethod.toUpperCase()}${deliveryMethod === 'paczkomat' ? ' (InPost)' : ''}${coupon ? ` [Rabat: ${coupon.code}]` : ''}`,
         totalPrice: finalTotal,
-        items: cart,
+        items: fresh.items,
       });
       setOrderedTotal(finalTotal);
       setIsOrdered(true);
       try { await clearCart(); } catch { setCartError('Zamówienie zostało zapisane, ale koszyk nie został wyczyszczony.'); }
     } catch (err) {
       console.error('Nie udało się zapisać zamówienia:', err);
-      setOrderError('Nie udało się złożyć zamówienia. Sprawdź połączenie i upewnij się, że jesteś zalogowany.');
+      setOrderError('Nie udało się zapisać zamówienia. Sprawdź połączenie i spróbuj ponownie.');
     } finally {
       setIsSubmitting(false);
     }
@@ -151,6 +194,7 @@ export const CheckoutPage: React.FC = () => {
       </div>
 
       <form onSubmit={handleSubmit}>
+        <UnavailableCartNotice />
         {orderError && <p role="alert" className="mb-4 rounded-xl bg-red-50 p-4 text-sm text-red-700">{orderError}</p>}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* LEFT COLUMN: Customer info, Delivery, Payment (7 cols) */}
@@ -520,7 +564,7 @@ export const CheckoutPage: React.FC = () => {
               <div className="pt-2">
                 <button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || unavailableCount > 0}
                   className="w-full py-4 px-6 text-sm font-black text-white bg-purple-600 hover:bg-purple-700 active:bg-purple-800 rounded-2xl shadow-md flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50"
                 >
                   {isSubmitting ? (

@@ -1,8 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { MOCK_PRODUCTS } from '../mockData';
 import { Product } from '../types';
-import { getProducts } from '../services/api';
+import { getProducts, getCategories } from '../services/api';
 import { useCart } from '../context/CartContext';
 import { ShoppingBag, Star, Zap, Check, Loader2, Heart, Ruler, UserCheck } from 'lucide-react';
 import {
@@ -34,8 +33,10 @@ export const ProductsPage: React.FC = () => {
   const [quickNotice, setQuickNotice] = useState<string | null>(null);
   const [wishlist, setWishlist] = useState<string[]>([]);
 
-  const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [categories, setCategories] = useState<Awaited<ReturnType<typeof getCategories>>>([]);
   const [isFitFinderOpen, setIsFitFinderOpen] = useState(false);
   const [fitProfile, setFitProfile] = useState<FitProfile | null>(() => loadSavedFitProfile());
 
@@ -50,27 +51,21 @@ export const ProductsPage: React.FC = () => {
     const loadProducts = async () => {
       try {
         setLoading(true);
-        const data = await getProducts();
-        if (isMounted && data && data.length > 0) {
+        const [data, categoryData] = await Promise.all([getProducts(), getCategories()]);
+        if (isMounted) {
           setProducts(data);
+          setCategories(categoryData);
+          setLoadError(false);
         }
       } catch (err) {
-        console.warn('Backend niedostępny, używam danych mock:', err);
+        console.error('Nie udało się pobrać katalogu:', err);
+        if (isMounted) setLoadError(true);
       } finally {
         if (isMounted) setLoading(false);
       }
     };
-    loadProducts();
-    const handleUpdate = () => {
-      getProducts().then((data) => {
-        if (data && data.length > 0) setProducts(data);
-      });
-    };
-    window.addEventListener("technishop_products_updated", handleUpdate);
-    return () => {
-      isMounted = false;
-      window.removeEventListener("technishop_products_updated", handleUpdate);
-    };
+    void loadProducts();
+    return () => { isMounted = false; };
   }, []);
 
   const filteredProducts = useMemo(() => {
@@ -85,6 +80,8 @@ export const ProductsPage: React.FC = () => {
           p.title.toLowerCase().includes('plecak') ||
           p.title.toLowerCase().includes('butelka') ||
           p.title.toLowerCase().includes('czapka');
+      } else if (categoryParam !== 'all') {
+        matchesCategory = p.categoryId === categoryParam;
       }
 
       let matchesBrand = true;
@@ -112,16 +109,15 @@ export const ProductsPage: React.FC = () => {
   }, [products, categoryParam, brandParam, querySearch, sortBy]);
 
   const handleCategorySelect = (cat: string) => {
-    if (cat === 'all') {
-      searchParams.delete('category');
-    } else {
-      searchParams.set('category', cat);
-    }
-    setSearchParams(searchParams);
+    const next = new URLSearchParams(searchParams);
+    if (cat === 'all') next.delete('category');
+    else next.set('category', cat);
+    setSearchParams(next);
   };
 
   const handleQuickAdd = async (e: React.MouseEvent, product: Product) => {
     e.stopPropagation();
+    if (product.stock == null || product.stock <= 0) return;
     await addToCart(product, product.colors[0] || 'Domyślny', product.sizes[0] || 'M');
     setQuickNotice(`Dodano "${product.title}" do koszyka!`);
     setTimeout(() => setQuickNotice(null), 2500);
@@ -129,6 +125,7 @@ export const ProductsPage: React.FC = () => {
 
   const handleQuickSizeAdd = async (e: React.MouseEvent, product: Product, size: string) => {
     e.stopPropagation();
+    if (product.stock == null || product.stock <= 0) return;
     await addToCart(product, product.colors[0] || 'Domyślny', size);
     setQuickNotice(`Dodano "${product.title}" (${size}) do koszyka!`);
     setTimeout(() => setQuickNotice(null), 2500);
@@ -182,18 +179,35 @@ export const ProductsPage: React.FC = () => {
         </div>
       )}
 
-      {loading && products.length === 0 ? (
+      {!loading && !loadError && (
+        <div className="flex flex-wrap items-center gap-2">
+          <label htmlFor="product-category" className="text-sm font-semibold text-slate-700">Kategoria</label>
+          <select id="product-category" value={categoryParam}
+            onChange={(event) => handleCategorySelect(event.target.value)}
+            className="rounded-xl border border-[#DDD8CD] bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500">
+            <option value="all">Wszystkie produkty</option>
+            <option value="kobiety">Kobiety</option>
+            <option value="mezczyzni">Mężczyźni</option>
+            <option value="akcesoria">Akcesoria</option>
+            {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
+          </select>
+        </div>
+      )}
+
+      {loading ? (
         <div className="flex justify-center items-center py-24">
           <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
           <span className="ml-3 font-bold text-sm text-slate-600">Ładowanie produktów z bazy danych...</span>
         </div>
+      ) : loadError ? (
+        <p role="alert" className="py-12 text-center text-sm text-red-700">Nie udało się wczytać produktów. Odśwież stronę i spróbuj ponownie.</p>
       ) : filteredProducts.length === 0 ? (
         <div className="bg-white rounded-3xl border border-[#EBE6DD] p-12 text-center space-y-4 shadow-xs">
           <Zap className="w-12 h-12 mx-auto text-purple-400" />
           <h3 className="text-lg font-black text-slate-900">Brak produktów spełniających kryteria</h3>
           <p className="text-xs text-slate-500">Spróbuj zmienić kategorię lub wyczyścić wyszukiwanie.</p>
           <button
-            onClick={() => handleCategorySelect('all')}
+            onClick={() => setSearchParams({})}
             className="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-xl font-bold text-xs shadow-xs transition-colors cursor-pointer"
           >
             Pokaż wszystkie produkty
@@ -213,7 +227,7 @@ export const ProductsPage: React.FC = () => {
                 {/* Product Image Container (Modern 3:4 fashion ratio) */}
                 <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-[#FAF7F2] border border-[#EBE6DD] mb-4">
                   <img
-                    src={product.imageUrl}
+                    src={product.images?.[0] || product.imageUrl}
                     alt={product.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                   />
@@ -257,7 +271,7 @@ export const ProductsPage: React.FC = () => {
                   </span>
 
                   {/* Quick Size Picker on Hover (Reserved / Zara / Gymshark style) */}
-                  {product.sizes && product.sizes.length > 0 && (
+                  {product.stock != null && product.stock > 0 && product.sizes && product.sizes.length > 0 && (
                     <div className="absolute inset-x-2 bottom-2 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1.5 group-hover:translate-y-0 flex items-center justify-center gap-1 bg-white/95 backdrop-blur-md p-1.5 rounded-xl border border-slate-200 shadow-md">
                       <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider mr-0.5">
                         Rozmiar:
@@ -316,11 +330,13 @@ export const ProductsPage: React.FC = () => {
                     <span className="text-lg font-black text-slate-900">
                       {product.price.toFixed(2)} <span className="text-xs font-bold">zł</span>
                     </span>
-                    {(product.stock ?? 0) === 0 ? (
+                    {product.stock == null ? (
+                      <span className="text-xs text-slate-600">Dostępność niepotwierdzona</span>
+                    ) : product.stock <= 0 ? (
                       <span className="text-[10px] font-black text-red-700 bg-red-50 px-2 py-0.5 rounded-full border border-red-200">
                         Wyprzedane
                       </span>
-                    ) : (product.stock ?? 0) <= 10 ? (
+                    ) : product.stock <= 10 ? (
                       <span className="text-[10px] font-black text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
                         Ostatnie {product.stock} szt.!
                       </span>
@@ -336,15 +352,15 @@ export const ProductsPage: React.FC = () => {
                 <div className="pt-3.5">
                   <button
                     onClick={(e) => handleQuickAdd(e, product)}
-                    disabled={(product.stock ?? 0) === 0}
+                    disabled={product.stock == null || product.stock <= 0}
                     className={`w-full py-2.5 px-3 rounded-xl font-black text-xs flex items-center justify-center space-x-1.5 transition-colors ${
-                      (product.stock ?? 0) === 0
+                      (product.stock == null || product.stock <= 0)
                         ? "bg-slate-200 text-slate-400 cursor-not-allowed"
                         : "text-white bg-purple-600 hover:bg-purple-700 active:bg-purple-800 shadow-xs cursor-pointer"
                     }`}
                   >
                     <ShoppingBag className="w-3.5 h-3.5" />
-                    <span>{(product.stock ?? 0) === 0 ? "BRAK W MAGAZYNIE" : "DODAJ DO KOSZYKA"}</span>
+                    <span>{product.stock == null ? "DOSTĘPNOŚĆ NIEPOTWIERDZONA" : product.stock <= 0 ? "BRAK W MAGAZYNIE" : "DODAJ DO KOSZYKA"}</span>
                   </button>
                 </div>
               </div>

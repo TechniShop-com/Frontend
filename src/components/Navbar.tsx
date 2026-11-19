@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { Logo } from './Logo';
 import { SearchModal } from './SearchModal';
+import { supabase } from '../lib/supabase';
 
 interface NavbarProps {
   activeBrand?: string;
@@ -35,10 +36,23 @@ export const Navbar: React.FC<NavbarProps> = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [hasPanelAccess, setHasPanelAccess] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const dropdownTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let active = true;
+    setHasPanelAccess(false);
+    if (user?.id && isUserMenuOpen) {
+      void supabase.from('admin_users').select('user_id').eq('user_id', user.id).maybeSingle()
+        .then(({ data, error }) => {
+          if (active) setHasPanelAccess(!error && Boolean(data));
+        });
+    }
+    return () => { active = false; };
+  }, [user?.id, isUserMenuOpen]);
 
   // Globalny skrót klawiszowy: Ctrl+K / Cmd+K otwiera wyszukiwarkę z dowolnego miejsca
   useEffect(() => {
@@ -490,7 +504,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
                   </div>
 
                   <div className="pt-2 space-y-1">
-                    {(user?.role === "admin" || (typeof window !== "undefined" && localStorage.getItem("technishop_admin_authenticated") === "true")) && (
+                    {hasPanelAccess && (
                       <Link
                         to="/admin"
                         onClick={() => setIsUserMenuOpen(false)}

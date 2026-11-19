@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { MOCK_PRODUCTS } from '../mockData';
 import { Product } from '../types';
 import { getProductById } from '../services/api';
 import { useCart } from '../context/CartContext';
@@ -31,20 +30,44 @@ const LazyProduct3DViewer = lazy(() => import('../components/Product3DViewer'));
 
 export const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const [result, setResult] = useState<{ id: string; product: Product | null; error: boolean } | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    if (!id) return;
+    void getProductById(id).then((product) => {
+      if (active) setResult({ id, product, error: false });
+    }).catch((error) => {
+      console.error('Nie udało się pobrać produktu:', error);
+      if (active) setResult({ id, product: null, error: true });
+    });
+    return () => { active = false; };
+  }, [id]);
+
+  if (!id || !result || result.id !== id) return <p role="status" className="py-24 text-center text-sm text-slate-600">Ładowanie produktu...</p>;
+  if (result.error) return <p role="alert" className="py-24 text-center text-sm text-red-700">Nie udało się wczytać produktu. Odśwież stronę i spróbuj ponownie.</p>;
+  if (!result.product) return <div className="py-24 text-center text-sm text-slate-700"><p>Nie znaleziono produktu.</p><Link to="/products" className="mt-4 inline-block text-purple-700 underline">Wróć do produktów</Link></div>;
+  return <ProductDetail key={result.product.id} product={result.product} />;
+};
+
+const ProductDetail: React.FC<{ product: Product }> = ({ product }) => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
-
-  const [product, setProduct] = useState<Product>(() => {
-    return MOCK_PRODUCTS.find((p) => p.id === id) || MOCK_PRODUCTS[0];
-  });
   const [selectedColor, setSelectedColor] = useState<string>(product.colors[0] || 'Domyślny');
-  const [selectedSize, setSelectedSize] = useState<string>(product.sizes[0] || 'M');
+  const [selectedSize, setSelectedSize] = useState<string>(() => {
+    const saved = loadSavedFitProfile();
+    return saved && supportsFitFinder(product) && product.sizes.includes(saved.recommendedSize)
+      ? saved.recommendedSize : product.sizes[0] || 'M';
+  });
   const [quantity, setQuantity] = useState<number>(1);
   const [activeTab, setActiveTab] = useState<'opis' | 'parametry' | 'rozmiary' | 'dostawa' | 'opinie'>('opis');
   const [addedNotice, setAddedNotice] = useState(false);
   const [isFitFinderOpen, setIsFitFinderOpen] = useState(false);
   const [fitProfile, setFitProfile] = useState<FitProfile | null>(() => loadSavedFitProfile());
   const canUseFitFinder = supportsFitFinder(product);
+  const productImages = Array.from(new Set([...(product.images || []), product.imageUrl].filter(Boolean)));
+  const [selectedImage, setSelectedImage] = useState(productImages[0] || '');
+  const canPurchase = product.stock != null && product.stock > 0;
 
   useEffect(() => {
     const syncProfile = () => setFitProfile(loadSavedFitProfile());
@@ -58,52 +81,21 @@ export const ProductDetailPage: React.FC = () => {
     getProduct3DConfig(product) ? '3d' : '2d'
   );
 
-  useEffect(() => {
-    const initialMock = MOCK_PRODUCTS.find((p) => p.id === id) || MOCK_PRODUCTS[0];
-    setProduct(initialMock);
-    setSelectedColor(initialMock.colors[0] || 'Domyślny');
-    setSelectedSize(initialMock.sizes[0] || 'M');
-    setMediaMode(getProduct3DConfig(initialMock) ? '3d' : '2d');
-
-    if (!id) return;
-    const fetchProduct = async () => {
-      try {
-        const data = await getProductById(id);
-        if (data) {
-          setProduct(data);
-          setSelectedColor(data.colors[0] || 'Domyślny');
-          const saved = loadSavedFitProfile();
-          if (saved && supportsFitFinder(data) && data.sizes.includes(saved.recommendedSize)) {
-            setSelectedSize(saved.recommendedSize);
-          } else {
-            setSelectedSize(data.sizes[0] || 'M');
-          }
-          setMediaMode(getProduct3DConfig(data) ? '3d' : '2d');
-        }
-      } catch (err) {
-        console.warn('Backend niedostępny, używam produktu mock:', err);
-      }
-    };
-    fetchProduct();
-  }, [id]);
-
-  const handleAdd = () => {
-    for (let i = 0; i < quantity; i++) {
-      addToCart(product, selectedColor, selectedSize);
-    }
+  const handleAdd = async () => {
+    if (!canPurchase) return;
+    await addToCart(product, selectedColor, selectedSize, quantity);
     setAddedNotice(true);
     setTimeout(() => setAddedNotice(false), 2500);
   };
 
-  const handleBuyNow = () => {
-    for (let i = 0; i < quantity; i++) {
-      addToCart(product, selectedColor, selectedSize);
-    }
+  const handleBuyNow = async () => {
+    if (!canPurchase) return;
+    await addToCart(product, selectedColor, selectedSize, quantity);
     navigate('/checkout');
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+    <div className="w-full min-w-0 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
       {/* Toast Notice */}
       {addedNotice && (
         <div className="fixed bottom-6 right-6 z-50 bg-purple-600 text-white px-6 py-3 rounded-2xl shadow-2xl font-black text-xs flex items-center space-x-2 anim-wiggle">
@@ -193,7 +185,7 @@ export const ProductDetailPage: React.FC = () => {
                     autoRotateDefault={true}
                     modelUrl={model3DConfig.modelUrl}
                     hotspots={model3DConfig.hotspots}
-                    fallbackImageUrl={product.imageUrl}
+                    fallbackImageUrl={selectedImage}
                     productTitle={product.title}
                   />
                 </Suspense>
@@ -201,10 +193,21 @@ export const ProductDetailPage: React.FC = () => {
             ) : (
               <div className="aspect-square w-full rounded-2xl overflow-hidden bg-[#FAF7F2] flex items-center justify-center relative group">
                 <img
-                  src={product.imageUrl}
+                  src={selectedImage}
                   alt={product.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                 />
+              </div>
+            )}
+            {productImages.length > 1 && (
+              <div className="flex flex-wrap gap-2" aria-label="Zdjęcia produktu">
+                {productImages.map((image, index) => (
+                  <button key={image} type="button" onClick={() => { setSelectedImage(image); setMediaMode('2d'); }}
+                    aria-label={`Pokaż zdjęcie ${index + 1}`} aria-pressed={mediaMode === '2d' && selectedImage === image}
+                    className={`h-16 w-16 overflow-hidden rounded-xl border-2 ${mediaMode === '2d' && selectedImage === image ? 'border-purple-600' : 'border-[#EBE6DD]'}`}>
+                    <img src={image} alt="" className="h-full w-full object-cover" />
+                  </button>
+                ))}
               </div>
             )}
           </div>
@@ -398,17 +401,20 @@ export const ProductDetailPage: React.FC = () => {
               </button>
               <span className="w-10 text-center font-bold text-sm text-slate-900">{quantity}</span>
               <button
-                onClick={() => setQuantity(quantity + 1)}
+                onClick={() => setQuantity(Math.min(product.stock ?? 1, quantity + 1))}
+                disabled={!canPurchase || quantity >= (product.stock ?? 0)}
                 className="w-8 h-8 rounded-lg bg-white border border-[#DDD8CD] text-purple-700 font-bold text-sm flex items-center justify-center hover:bg-purple-50 transition-colors"
               >
                 +
               </button>
             </div>
             <span className="text-[11px] font-medium">
-              {(product.stock ?? 0) === 0 ? (
-                <span className="text-red-600 font-bold">🚫 Produkt chwilowo wyprzedany</span>
-              ) : (product.stock ?? 0) <= 10 ? (
-                <span className="text-amber-700 font-bold">⚠️ Zostało tylko {product.stock} szt. w magazynie!</span>
+              {product.stock == null ? (
+                <span className="text-slate-600">Dostępność niepotwierdzona</span>
+              ) : product.stock <= 0 ? (
+                <span className="text-red-600 font-bold">Produkt chwilowo wyprzedany</span>
+              ) : product.stock <= 10 ? (
+                <span className="text-amber-700 font-bold">Zostało tylko {product.stock} szt. w magazynie</span>
               ) : (
                 <span className="text-emerald-700 font-semibold">✓ Dostępne: {product.stock} szt. w magazynie</span>
               )}
@@ -419,18 +425,18 @@ export const ProductDetailPage: React.FC = () => {
           <div className="space-y-3 pt-4 border-t border-[#EBE6DD]">
             <button
               onClick={handleAdd}
-              disabled={(product.stock ?? 0) === 0}
+              disabled={!canPurchase}
               className={`w-full py-3.5 px-6 rounded-xl font-bold text-sm flex items-center justify-center space-x-2 transition-colors ${
-                (product.stock ?? 0) === 0
+                !canPurchase
                   ? "bg-slate-200 text-slate-400 cursor-not-allowed"
                   : "text-white bg-purple-600 hover:bg-purple-700 active:bg-purple-800 shadow-sm cursor-pointer"
               }`}
             >
               <ShoppingBag className="w-4 h-4" />
-              <span>{(product.stock ?? 0) === 0 ? "PRODUKT WYPRZEDANY" : "DODAJ DO KOSZYKA"}</span>
+              <span>{product.stock == null ? "DOSTĘPNOŚĆ NIEPOTWIERDZONA" : !canPurchase ? "PRODUKT WYPRZEDANY" : "DODAJ DO KOSZYKA"}</span>
             </button>
 
-            {(product.stock ?? 0) > 0 && (
+            {canPurchase && (
               <button
                 onClick={handleBuyNow}
                 className="w-full py-3 px-6 rounded-xl font-bold text-sm text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 flex items-center justify-center space-x-2 transition-colors cursor-pointer"
@@ -685,15 +691,15 @@ export const ProductDetailPage: React.FC = () => {
         </div>
         <button
           onClick={handleAdd}
-          disabled={(product.stock ?? 0) === 0}
+          disabled={!canPurchase}
           className={`py-2.5 px-5 font-black text-xs rounded-xl shadow-xs flex items-center gap-1.5 ${
-            (product.stock ?? 0) === 0
+            !canPurchase
               ? "bg-slate-200 text-slate-400 cursor-not-allowed"
               : "bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white cursor-pointer"
           }`}
         >
           <ShoppingBag className="w-4 h-4" />
-          <span>{(product.stock ?? 0) === 0 ? "WYPRZEDANE" : "DODAJ DO KOSZYKA"}</span>
+          <span>{product.stock == null ? "DOSTĘPNOŚĆ NIEPOTWIERDZONA" : !canPurchase ? "WYPRZEDANE" : "DODAJ DO KOSZYKA"}</span>
         </button>
       </div>
 

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { MOCK_PRODUCTS } from '../mockData';
 import { Product } from '../types';
 import { getProducts } from '../services/api';
 import {
@@ -46,8 +45,9 @@ export const HomePage: React.FC<HomePageProps> = () => {
   const querySearch = searchParams.get('search') || '';
   const categoryParam = searchParams.get('category') || 'all';
 
-  const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [quickNotice, setQuickNotice] = useState<string | null>(null);
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [isFitFinderOpen, setIsFitFinderOpen] = useState(false);
@@ -65,11 +65,13 @@ export const HomePage: React.FC<HomePageProps> = () => {
       try {
         setLoading(true);
         const data = await getProducts();
-        if (isMounted && data && data.length > 0) {
+        if (isMounted) {
           setProducts(data);
+          setLoadError(false);
         }
       } catch (err) {
-        console.warn('Backend niedostępny, używam danych mock:', err);
+        console.error('Nie udało się pobrać produktów:', err);
+        if (isMounted) setLoadError(true);
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -96,6 +98,7 @@ export const HomePage: React.FC<HomePageProps> = () => {
 
   const handleQuickAdd = async (e: React.MouseEvent, product: Product) => {
     e.stopPropagation();
+    if (product.stock == null || product.stock <= 0) return;
     await addToCart(product, product.colors[0] || 'Domyślny', product.sizes[0] || 'M');
     setQuickNotice(`Dodano "${product.title}" do koszyka!`);
     setTimeout(() => setQuickNotice(null), 2500);
@@ -103,6 +106,7 @@ export const HomePage: React.FC<HomePageProps> = () => {
 
   const handleQuickSizeAdd = async (e: React.MouseEvent, product: Product, size: string) => {
     e.stopPropagation();
+    if (product.stock == null || product.stock <= 0) return;
     await addToCart(product, product.colors[0] || 'Domyślny', size);
     setQuickNotice(`Dodano "${product.title}" (${size}) do koszyka!`);
     setTimeout(() => setQuickNotice(null), 2500);
@@ -242,6 +246,10 @@ export const HomePage: React.FC<HomePageProps> = () => {
             <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
             <span className="ml-3 font-bold text-sm text-slate-600">Ładowanie produktów z bazy...</span>
           </div>
+        ) : loadError ? (
+          <p role="alert" className="py-12 text-center text-sm text-red-700">Nie udało się wczytać produktów. Odśwież stronę i spróbuj ponownie.</p>
+        ) : filteredProducts.length === 0 ? (
+          <p className="py-12 text-center text-sm text-slate-600">Brak produktów do wyświetlenia.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProducts.slice(0, 4).map((product) => {
@@ -256,7 +264,7 @@ export const HomePage: React.FC<HomePageProps> = () => {
                   {/* Product Image Container (3:4 ratio) */}
                   <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-[#FAF7F2] border border-[#EBE6DD] mb-4">
                     <img
-                      src={product.imageUrl}
+                      src={product.images?.[0] || product.imageUrl}
                       alt={product.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                     />
@@ -300,7 +308,7 @@ export const HomePage: React.FC<HomePageProps> = () => {
                     </span>
 
                     {/* Quick Size Picker on Hover */}
-                    {product.sizes && product.sizes.length > 0 && (
+                    {product.stock != null && product.stock > 0 && product.sizes && product.sizes.length > 0 && (
                       <div className="absolute inset-x-2 bottom-2 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1.5 group-hover:translate-y-0 flex items-center justify-center gap-1 bg-white/95 backdrop-blur-md p-1.5 rounded-xl border border-slate-200 shadow-md">
                         <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider mr-0.5">
                           Rozmiar:
@@ -366,10 +374,11 @@ export const HomePage: React.FC<HomePageProps> = () => {
                   <div className="pt-3.5">
                     <button
                       onClick={(e) => handleQuickAdd(e, product)}
-                      className="w-full py-2.5 px-3 rounded-xl font-black text-xs text-white bg-purple-600 hover:bg-purple-700 active:bg-purple-800 shadow-xs flex items-center justify-center space-x-1.5 transition-colors cursor-pointer"
+                      disabled={product.stock == null || product.stock <= 0}
+                      className="w-full py-2.5 px-3 rounded-xl font-black text-xs text-white bg-purple-600 hover:bg-purple-700 active:bg-purple-800 shadow-xs flex items-center justify-center space-x-1.5 transition-colors cursor-pointer disabled:bg-slate-200 disabled:text-slate-500 disabled:cursor-not-allowed"
                     >
                       <ShoppingBag className="w-3.5 h-3.5" />
-                      <span>DODAJ DO KOSZYKA</span>
+                      <span>{product.stock == null ? "DOSTĘPNOŚĆ NIEPOTWIERDZONA" : product.stock <= 0 ? "BRAK W MAGAZYNIE" : "DODAJ DO KOSZYKA"}</span>
                     </button>
                   </div>
                 </div>

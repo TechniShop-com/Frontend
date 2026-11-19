@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { PromoCodeBox } from './PromoCodeBox';
+import { UnavailableCartNotice } from './UnavailableCartNotice';
 import {
   X,
   Trash2,
@@ -26,6 +27,7 @@ export const CartDrawer: React.FC = () => {
     updateQuantity,
     isCartDrawerOpen,
     closeCartDrawer,
+    unavailableCount,
   } = useCart();
   const navigate = useNavigate();
 
@@ -122,14 +124,15 @@ export const CartDrawer: React.FC = () => {
 
           {/* Cart Item List */}
           <div className="flex-1 overflow-y-auto px-5 py-4 divide-y divide-[#EAE4D9]">
+            <UnavailableCartNotice />
             {cart.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center py-12 space-y-4">
                 <div className="w-16 h-16 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center border border-purple-200 shadow-xs">
                   <ShoppingBag className="w-8 h-8 stroke-[1.5]" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="font-extrabold text-sm text-slate-800">Twój koszyk jest pusty</h3>
-                  <p className="text-xs text-slate-500">Wybierz coś z naszej szkolnej kolekcji!</p>
+                  <h3 className="font-extrabold text-sm text-slate-800">{unavailableCount ? 'Brak dostępnych produktów w koszyku' : 'Twój koszyk jest pusty'}</h3>
+                  {!unavailableCount && <p className="text-xs text-slate-500">Wybierz coś z naszej szkolnej kolekcji!</p>}
                 </div>
                 <button
                   onClick={() => {

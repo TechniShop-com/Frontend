@@ -23,6 +23,9 @@ interface CartContextType {
   removeFromCart: (indexOrId: number) => Promise<void>;
   updateQuantity: (indexOrId: number, newQty: number) => Promise<void>;
   clearCart: () => Promise<void>;
+  refreshCart: () => Promise<{ items: CartItem[]; unavailableIds: number[] }>;
+  removeUnavailableItems: () => Promise<void>;
+  unavailableCount: number;
   subtotalPrice: number;
   discountAmount: number;
   totalPrice: number;
@@ -60,21 +63,35 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  const [unavailableIds, setUnavailableIds] = useState<number[]>([]);
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
 
   const openCartDrawer = () => setIsCartDrawerOpen(true);
   const closeCartDrawer = () => setIsCartDrawerOpen(false);
 
+  const refreshCart = async () => {
+    const data = await getCart();
+    setCart(data.items);
+    setUnavailableIds(data.unavailableIds);
+    return { items: data.items, unavailableIds: data.unavailableIds };
+  };
+
+  const removeUnavailableItems = async () => {
+    try {
+      for (const id of unavailableIds) await removeCartItemApi(id);
+    } finally {
+      // Reflect any partial removal even if one request failed.
+      await refreshCart();
+    }
+  };
+
   // Synchronizacja z Supabase po zalogowaniu.
   useEffect(() => {
     const syncCart = async () => {
-      if (!isAuthenticated) return;
+      if (!isAuthenticated) { setUnavailableIds([]); return; }
       try {
         setIsLoading(true);
-        const data = await getCart();
-        if (data && Array.isArray(data.items)) {
-          setCart(data.items);
-        }
+        await refreshCart();
       } catch (err) {
         console.warn('Backend cart not reachable, using local storage cart.');
       } finally {
@@ -161,6 +178,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) throw error;
     if (data.session) await clearCartApi();
     setCart([]);
+    setUnavailableIds([]);
     setCoupon(null);
   };
 
@@ -213,6 +231,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         removeFromCart,
         updateQuantity,
         clearCart,
+        refreshCart,
+        removeUnavailableItems,
+        unavailableCount: unavailableIds.length,
         subtotalPrice,
         discountAmount,
         totalPrice,
