@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { PromoCodeBox } from '../components/PromoCodeBox';
+import { UnavailableCartNotice } from '../components/UnavailableCartNotice';
 import {
   Trash2,
   ShoppingBag,
@@ -24,6 +25,7 @@ export const CartPage: React.FC = () => {
     totalPrice,
     coupon,
     isFreeShippingPromo,
+    unavailableCount,
   } = useCart();
   const navigate = useNavigate();
 
@@ -55,14 +57,15 @@ export const CartPage: React.FC = () => {
         </Link>
       </div>
 
+      <UnavailableCartNotice />
       {cart.length === 0 ? (
         <div className="bg-white p-12 sm:p-16 rounded-3xl border border-[#E7E2D8] text-center space-y-5 shadow-xs">
           <div className="w-20 h-20 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center mx-auto border border-purple-200">
             <ShoppingBag className="w-10 h-10 stroke-[1.5]" />
           </div>
           <div className="space-y-1">
-            <h3 className="text-lg font-black text-slate-900">Twój koszyk jest obecnie pusty</h3>
-            <p className="text-xs text-slate-500 font-medium">Nie masz jeszcze żadnych produktów w koszyku.</p>
+            <h3 className="text-lg font-black text-slate-900">{unavailableCount ? 'Brak dostępnych produktów w koszyku' : 'Twój koszyk jest obecnie pusty'}</h3>
+            {!unavailableCount && <p className="text-xs text-slate-500 font-medium">Nie masz jeszcze żadnych produktów w koszyku.</p>}
           </div>
           <Link
             to="/products"

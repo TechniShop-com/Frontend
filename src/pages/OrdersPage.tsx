@@ -5,7 +5,7 @@ import { getMyOrdersApi } from '../services/api';
 import { supabase } from '../lib/supabase';
 import { Order } from '../types';
 
-const labels: Record<string, string> = { PENDING: 'Oczekuje', PAID: 'Opłacone', SHIPPED: 'Wysłane', COMPLETED: 'Zrealizowane', CANCELLED: 'Anulowane' };
+const labels: Record<string, string> = { PENDING: 'Oczekuje', PACKED: 'Spakowane', PAID: 'Opłacone', SHIPPED: 'Wysłane', COMPLETED: 'Zrealizowane', CANCELLED: 'Anulowane' };
 
 export function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
