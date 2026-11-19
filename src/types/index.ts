@@ -11,8 +11,16 @@ export interface Product {
   colors: string[];
   sizes: string[];
   imageUrl: string;
-  stock?: number;
+  stock?: number | null;
   featured?: boolean;
+  categoryId?: string | null;
+  images?: string[];
+  isActive?: boolean;
+}
+
+export interface ProductCategory {
+  id: string;
+  name: string;
 }
 
 export interface CartItem {
@@ -31,7 +39,7 @@ export interface User {
   role?: 'admin' | 'customer';
 }
 
-export type OrderStatus = 'PENDING' | 'PAID' | 'SHIPPED' | 'COMPLETED' | 'CANCELLED';
+export type OrderStatus = 'PENDING' | 'PACKED' | 'PAID' | 'SHIPPED' | 'COMPLETED' | 'CANCELLED';
 
 export interface Order {
   id: number | string;
