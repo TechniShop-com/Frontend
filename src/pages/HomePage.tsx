@@ -12,6 +12,8 @@ import {
   Heart,
   Ruler,
   UserCheck,
+  GraduationCap,
+  Laptop,
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { HeroSlider } from '../components/HeroSlider';
@@ -131,6 +133,75 @@ export const HomePage: React.FC<HomePageProps> = () => {
           <span>{quickNotice}</span>
         </div>
       )}
+
+      {/* BRAND SHOWCASE BANNERS (Techni Schools & Techni Zdalni) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        {/* Banner 1: Techni Schools */}
+        <div
+          onClick={() => navigate('/products?brand=techni-schools')}
+          className="group relative rounded-3xl overflow-hidden bg-slate-950 border border-[#E2DDD3] shadow-md hover:shadow-xl hover:shadow-purple-950/15 transition-all duration-300 cursor-pointer min-h-[200px] sm:min-h-[240px] flex items-center"
+        >
+          <img
+            src="https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=1600&q=80"
+            alt="Kolekcja Techni Schools"
+            className="absolute inset-0 w-full h-full object-cover object-center opacity-40 group-hover:scale-105 group-hover:opacity-50 transition-all duration-700 ease-out"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 sm:via-slate-950/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
+
+          <div className="relative z-10 p-6 sm:p-10 lg:p-12 max-w-2xl space-y-3">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-purple-600/30 border border-purple-400/30 text-purple-200 text-[11px] font-black uppercase tracking-wider backdrop-blur-md">
+              <GraduationCap className="w-3.5 h-3.5 text-purple-300" />
+              <span>Kolekcja Stacjonarna</span>
+            </div>
+            <h3 className="text-2xl sm:text-4xl font-black text-white tracking-tight leading-tight">
+              Sekcja <span className="text-purple-300">Techni Schools</span>
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-200 font-medium leading-relaxed max-w-xl">
+              Klasyczna linia szkolna: bluzy hoodie z haftem, polo premium i akcesoria stworzone z myślą o uczniach szkół stacjonarnych.
+            </p>
+            <div className="pt-1">
+              <span className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-purple-600 group-hover:bg-purple-700 text-white font-black text-xs shadow-md transition-all group-hover:translate-x-1">
+                <span>Przeglądaj Techni Schools</span>
+                <ArrowRight className="w-4 h-4" />
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Banner 2: Techni Zdalni */}
+        <div
+          onClick={() => navigate('/products?brand=techni-zdalni')}
+          className="group relative rounded-3xl overflow-hidden bg-slate-950 border border-[#E2DDD3] shadow-md hover:shadow-xl hover:shadow-indigo-950/15 transition-all duration-300 cursor-pointer min-h-[200px] sm:min-h-[240px] flex items-center"
+        >
+          <img
+            src="https://images.unsplash.com/photo-1527719327859-c6ce80353573?auto=format&fit=crop&w=1600&q=80"
+            alt="Kolekcja Techni Zdalni"
+            className="absolute inset-0 w-full h-full object-cover object-center opacity-40 group-hover:scale-105 group-hover:opacity-50 transition-all duration-700 ease-out"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#060e1e] via-[#060e1e]/85 sm:via-[#060e1e]/65 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#060e1e]/80 via-transparent to-transparent" />
+
+          <div className="relative z-10 p-6 sm:p-10 lg:p-12 max-w-2xl space-y-3">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-600/30 border border-indigo-400/30 text-indigo-200 text-[11px] font-black uppercase tracking-wider backdrop-blur-md">
+              <Laptop className="w-3.5 h-3.5 text-indigo-300" />
+              <span>Tech & Remote Edition</span>
+            </div>
+            <h3 className="text-2xl sm:text-4xl font-black text-white tracking-tight leading-tight">
+              Sekcja <span className="text-indigo-300">Techni Zdalni</span>
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-200 font-medium leading-relaxed max-w-xl">
+              Modne kroje oversize, przewiewne t-shirty dev oraz plecaki na laptopa 24L przygotowane dla uczniów platformy zdalnej.
+            </p>
+            <div className="pt-1">
+              <span className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-indigo-600 group-hover:bg-indigo-700 text-white font-black text-xs shadow-md transition-all group-hover:translate-x-1">
+                <span>Przeglądaj Techni Zdalni</span>
+                <ArrowRight className="w-4 h-4" />
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* FEATURED PRODUCTS SECTION */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
