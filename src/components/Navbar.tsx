@@ -149,7 +149,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
 
 
         {/* Center Navigation Links & Produkty Dropdown */}
-        <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center space-x-4 lg:space-x-6 text-xs lg:text-sm font-extrabold whitespace-nowrap">
+        <div className="hidden lg:flex absolute left-1/2 -translate-x-1/2 items-center space-x-6 text-sm font-extrabold whitespace-nowrap">
           {/* Techni Schools - Lewa strona grupy */}
           <Link
             to="/products?brand=techni-schools"
