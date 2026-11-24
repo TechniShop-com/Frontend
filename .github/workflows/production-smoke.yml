@@ -63,7 +63,7 @@ jobs:
   promote:
     needs: smoke
     if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.promote == true
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
       contents: read
