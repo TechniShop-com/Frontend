@@ -137,13 +137,13 @@ export const HomePage: React.FC<HomePageProps> = () => {
       {/* BRAND SHOWCASE BANNERS (Techni Schools & Techni Zdalni) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         {/* Banner 1: Techni Schools */}
-        <div
-          onClick={() => navigate('/products?brand=techni-schools')}
-          className="group relative rounded-3xl overflow-hidden bg-slate-950 border border-[#E2DDD3] shadow-md hover:shadow-xl hover:shadow-purple-950/15 transition-all duration-300 cursor-pointer min-h-[200px] sm:min-h-[240px] flex items-center"
+        <Link
+          to="/products?brand=techni-schools"
+          className="group relative focus:outline-none focus-visible:ring-4 focus-visible:ring-purple-400/60 rounded-3xl overflow-hidden bg-slate-950 border border-[#E2DDD3] shadow-md hover:shadow-xl hover:shadow-purple-950/15 transition-all duration-300 cursor-pointer min-h-[200px] sm:min-h-[240px] flex items-center"
         >
           <img
             src="https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=1600&q=80"
-            alt="Kolekcja Techni Schools"
+            alt=""
             className="absolute inset-0 w-full h-full object-cover object-center opacity-40 group-hover:scale-105 group-hover:opacity-50 transition-all duration-700 ease-out"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 sm:via-slate-950/60 to-transparent" />
@@ -167,16 +167,16 @@ export const HomePage: React.FC<HomePageProps> = () => {
               </span>
             </div>
           </div>
-        </div>
+        </Link>
 
         {/* Banner 2: Techni Zdalni */}
-        <div
-          onClick={() => navigate('/products?brand=techni-zdalni')}
-          className="group relative rounded-3xl overflow-hidden bg-slate-950 border border-[#E2DDD3] shadow-md hover:shadow-xl hover:shadow-indigo-950/15 transition-all duration-300 cursor-pointer min-h-[200px] sm:min-h-[240px] flex items-center"
+        <Link
+          to="/products?brand=techni-zdalni"
+          className="group relative focus:outline-none focus-visible:ring-4 focus-visible:ring-purple-400/60 rounded-3xl overflow-hidden bg-slate-950 border border-[#E2DDD3] shadow-md hover:shadow-xl hover:shadow-indigo-950/15 transition-all duration-300 cursor-pointer min-h-[200px] sm:min-h-[240px] flex items-center"
         >
           <img
             src="https://images.unsplash.com/photo-1527719327859-c6ce80353573?auto=format&fit=crop&w=1600&q=80"
-            alt="Kolekcja Techni Zdalni"
+            alt=""
             className="absolute inset-0 w-full h-full object-cover object-center opacity-40 group-hover:scale-105 group-hover:opacity-50 transition-all duration-700 ease-out"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-[#060e1e] via-[#060e1e]/85 sm:via-[#060e1e]/65 to-transparent" />
@@ -200,7 +200,7 @@ export const HomePage: React.FC<HomePageProps> = () => {
               </span>
             </div>
           </div>
-        </div>
+        </Link>
       </section>
 
       {/* FEATURED PRODUCTS SECTION */}

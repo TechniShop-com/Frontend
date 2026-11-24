@@ -115,6 +115,13 @@ export const ProductsPage: React.FC = () => {
     setSearchParams(next);
   };
 
+  const handleBrandSelect = (brand: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (brand === 'all') next.delete('brand');
+    else next.set('brand', brand);
+    setSearchParams(next);
+  };
+
   const handleQuickAdd = async (e: React.MouseEvent, product: Product) => {
     e.stopPropagation();
     if (product.stock == null || product.stock <= 0) return;
@@ -190,6 +197,14 @@ export const ProductsPage: React.FC = () => {
             <option value="mezczyzni">Mężczyźni</option>
             <option value="akcesoria">Akcesoria</option>
             {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
+          </select>
+          <label htmlFor="product-brand" className="text-sm font-semibold text-slate-700 sm:ml-2">Kolekcja</label>
+          <select id="product-brand" value={brandParam}
+            onChange={(event) => handleBrandSelect(event.target.value)}
+            className="rounded-xl border border-[#DDD8CD] bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500">
+            <option value="all">Wszystkie kolekcje</option>
+            <option value="techni-schools">Techni Schools</option>
+            <option value="techni-zdalni">Techni Zdalni</option>
           </select>
         </div>
       )}
