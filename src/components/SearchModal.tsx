@@ -10,7 +10,6 @@ import {
   Layers,
 } from 'lucide-react';
 import { Product } from '../types';
-import { MOCK_PRODUCTS } from '../mockData';
 import { getProducts } from '../services/api';
 import { searchProductsFuzzy } from '../utils/fuzzySearch';
 
@@ -32,30 +31,34 @@ const POPULAR_TAGS = [
 export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
-  const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [catalogLoading, setCatalogLoading] = useState(false);
+  const [catalogError, setCatalogError] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Załaduj produkty z API lub danych mock
+  // Load only products currently published in the catalogue.
   useEffect(() => {
+    if (!isOpen) return;
     let isMounted = true;
     const fetchProducts = async () => {
+      setCatalogLoading(true);
+      setCatalogError(false);
       try {
         const data = await getProducts();
-        if (isMounted && data && data.length > 0) {
-          setProducts(data);
-        }
+        if (isMounted) setProducts(data);
       } catch {
-        // Fallback do MOCK_PRODUCTS
-        if (isMounted) setProducts(MOCK_PRODUCTS);
+        if (isMounted) { setProducts([]); setCatalogError(true); }
+      } finally {
+        if (isMounted) setCatalogLoading(false);
       }
     };
     fetchProducts();
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [isOpen]);
 
   // Autofocus przy otwarciu
   useEffect(() => {
@@ -222,7 +225,11 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
           {/* Treść okna wyszukiwania */}
           <div className="max-h-[60vh] overflow-y-auto p-4 sm:p-5">
             {/* Widok początkowy: brak zapytania */}
-            {!query.trim() ? (
+            {catalogLoading ? (
+              <p role="status" className="py-8 text-center text-sm text-slate-600">Wczytywanie produktów…</p>
+            ) : catalogError ? (
+              <p role="alert" className="py-8 text-center text-sm text-red-700">Nie udało się wczytać produktów. Zamknij wyszukiwarkę i spróbuj ponownie.</p>
+            ) : !query.trim() ? (
               <div className="space-y-6 py-2">
                 {/* Popularne wyszukiwania */}
                 <div>
