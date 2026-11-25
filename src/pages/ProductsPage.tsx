@@ -27,6 +27,7 @@ export const ProductsPage: React.FC = () => {
   const { addToCart } = useCart();
 
   const categoryParam = searchParams.get('category') || 'all';
+  const brandParam = searchParams.get('brand') || 'all';
   const querySearch = searchParams.get('search') || '';
   const [sortBy] = useState<'default' | 'price-asc' | 'price-desc'>('default');
   const [quickNotice, setQuickNotice] = useState<string | null>(null);
@@ -83,12 +84,19 @@ export const ProductsPage: React.FC = () => {
         matchesCategory = p.categoryId === categoryParam;
       }
 
+      let matchesBrand = true;
+      if (brandParam === 'techni-schools') {
+        matchesBrand = p.brand === 'TECHNI_SCHOOLS';
+      } else if (brandParam === 'techni-zdalni') {
+        matchesBrand = p.brand === 'TECHNI_ZDALNI';
+      }
+
       const matchesQuery =
         !querySearch ||
         p.title.toLowerCase().includes(querySearch.toLowerCase()) ||
         p.description.toLowerCase().includes(querySearch.toLowerCase());
 
-      return matchesCategory && matchesQuery;
+      return matchesCategory && matchesBrand && matchesQuery;
     });
 
     if (sortBy === 'price-asc') {
@@ -98,12 +106,19 @@ export const ProductsPage: React.FC = () => {
     }
 
     return result;
-  }, [products, categoryParam, querySearch, sortBy]);
+  }, [products, categoryParam, brandParam, querySearch, sortBy]);
 
   const handleCategorySelect = (cat: string) => {
     const next = new URLSearchParams(searchParams);
     if (cat === 'all') next.delete('category');
     else next.set('category', cat);
+    setSearchParams(next);
+  };
+
+  const handleBrandSelect = (brand: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (brand === 'all') next.delete('brand');
+    else next.set('brand', brand);
     setSearchParams(next);
   };
 
@@ -182,6 +197,14 @@ export const ProductsPage: React.FC = () => {
             <option value="mezczyzni">Mężczyźni</option>
             <option value="akcesoria">Akcesoria</option>
             {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
+          </select>
+          <label htmlFor="product-brand" className="text-sm font-semibold text-slate-700 sm:ml-2">Kolekcja</label>
+          <select id="product-brand" value={brandParam}
+            onChange={(event) => handleBrandSelect(event.target.value)}
+            className="rounded-xl border border-[#DDD8CD] bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500">
+            <option value="all">Wszystkie kolekcje</option>
+            <option value="techni-schools">Techni Schools</option>
+            <option value="techni-zdalni">Techni Zdalni</option>
           </select>
         </div>
       )}
