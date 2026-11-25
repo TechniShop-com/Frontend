@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import {
   Search,
@@ -175,8 +176,8 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+  return createPortal(
+    <div className="fixed inset-0 z-[150] overflow-y-auto">
       {/* Tło z efektem rozmycia */}
       <div
         onClick={onClose}
@@ -186,7 +187,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
       <div className="min-h-full flex items-start justify-center p-4 sm:p-6 lg:p-10">
         <div
           onClick={(e) => e.stopPropagation()}
-          className="relative w-full max-w-2xl bg-[#FAF8F5] border border-[#E3DDD2] rounded-3xl shadow-2xl overflow-hidden mt-6 sm:mt-12 animate-in zoom-in-95 fade-in duration-200"
+          className="relative z-10 w-full max-w-2xl bg-[#FAF8F5] border border-[#E3DDD2] rounded-3xl shadow-2xl overflow-hidden mt-6 sm:mt-12 animate-in zoom-in-95 fade-in duration-200"
         >
           {/* Pasek Wyszukiwania */}
           <div className="relative border-b border-[#E3DDD2] bg-white px-5 py-4 flex items-center space-x-3">
@@ -444,6 +445,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

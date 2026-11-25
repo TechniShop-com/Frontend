@@ -134,8 +134,9 @@ export const Navbar: React.FC<NavbarProps> = () => {
   };
 
   return (
-    <header
-      className={`sticky top-0 z-50 border-b transition-all duration-300 ${
+    <>
+      <header
+        className={`sticky top-0 z-50 border-b transition-all duration-300 ${
         isScrolled
           ? 'bg-[#EFECE4]/85 backdrop-blur-md border-[#E2DDD3]/60 shadow-xs'
           : 'bg-[#EFECE4] border-[#E2DDD3]'
@@ -539,9 +540,10 @@ export const Navbar: React.FC<NavbarProps> = () => {
           )}
         </div>
       </div>
-
-      {/* Instant Live Search Modal */}
-      <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </header>
-  );
+
+    {/* Instant Live Search Modal */}
+    <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+  </>
+);
 };
