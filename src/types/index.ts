@@ -16,6 +16,7 @@ export interface Product {
   categoryId?: string | null;
   images?: string[];
   isActive?: boolean;
+  rating?: number | null;
 }
 
 export interface ProductCategory {
