@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { getProductImagePublicUrl } from '../lib/supabase';
 
 interface SlideItem {
   id: number;
@@ -11,27 +12,27 @@ interface SlideItem {
 const SLIDE_IMAGES: SlideItem[] = [
   {
     id: 1,
-    imageUrl: 'https://images.unsplash.com/photo-1527719327859-c6ce80353573?auto=format&fit=crop&w=1920&q=80',
+    imageUrl: getProductImagePublicUrl('photo-1527719327859-c6ce80353573.avif'),
     alt: 'Koszulka T-Shirt Techni Pure Packshot',
   },
   {
     id: 2,
-    imageUrl: 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=1920&q=80',
+    imageUrl: getProductImagePublicUrl('photo-1556905055-8f358a7a47b2.avif'),
     alt: 'Bluzy Hoodie i Odzież Techni Flatlay',
   },
   {
     id: 3,
-    imageUrl: 'https://images.unsplash.com/photo-1581655353564-df123a1eb820?auto=format&fit=crop&w=1920&q=80',
+    imageUrl: getProductImagePublicUrl('photo-1581655353564-df123a1eb820.avif'),
     alt: 'Koszulka Polo Techni Classic Studio',
   },
   {
     id: 4,
-    imageUrl: 'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&w=1920&q=80',
+    imageUrl: getProductImagePublicUrl('photo-1618354691373-d851c5c3a990.avif'),
     alt: 'Kolekcja Koszulek Bawełnianych Techni',
   },
   {
     id: 5,
-    imageUrl: 'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=1920&q=80',
+    imageUrl: getProductImagePublicUrl('photo-1598033129183-c4f50c736f10.avif'),
     alt: 'Pastelowe Koszulki Polo Techni',
   },
 ];

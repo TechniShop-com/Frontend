@@ -3,6 +3,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Mail, Lock, User as UserIcon, ArrowRight, ShieldCheck, Truck, Eye, EyeOff, X } from 'lucide-react';
 import { Logo } from '../components/Logo';
+import { getProductImagePublicUrl } from '../lib/supabase';
 
 export const AuthPage: React.FC = () => {
   const { user, login, register, loginWithGoogle } = useAuth();
@@ -92,7 +93,7 @@ export const AuthPage: React.FC = () => {
       <div className="hidden lg:flex lg:col-span-7 relative overflow-hidden bg-gradient-to-br from-purple-950 via-slate-950 to-indigo-950 p-12 xl:p-16 flex-col justify-between text-white select-none h-full">
         {/* Background Visual Image with Ambient Purple Overlay */}
         <img
-          src="https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=1600&q=80"
+          src={getProductImagePublicUrl('photo-1556905055-8f358a7a47b2.avif')}
           alt="TechniShop Merch Background"
           className="absolute inset-0 w-full h-full object-cover object-center opacity-30 mix-blend-overlay"
         />
