@@ -1,19 +1,43 @@
 import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import { Sparkles, ArrowRight, Check, ShoppingBag, Eye, RotateCw, Loader2, Box } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { MOCK_PRODUCTS } from '../mockData';
 import { useCart } from '../context/CartContext';
 import { getProduct3DConfig } from '../config/model3dConfig';
+import { getProductImagePublicUrl } from '../lib/supabase';
+import { getProductById } from '../services/api';
+import { Product } from '../types';
 
 const LazyProduct3DViewer = lazy(() => import('./Product3DViewer'));
 
+const INITIAL_3D_PRODUCT: Product = {
+  id: 'tee-men',
+  title: 'T-Shirt Techni Dev Men Edition',
+  description: 'Męski oddychający t-shirt z nadrukiem Techni Zdalni.',
+  price: 69.99,
+  brand: 'TECHNI_ZDALNI',
+  gender: 'MEN',
+  colors: ['Biała', 'Fioletowa', 'Czarna', 'Szara'],
+  sizes: ['S', 'M', 'L', 'XL'],
+  imageUrl: getProductImagePublicUrl('photo-1618354691373-d851c5c3a990.avif'),
+  stock: null,
+};
+
 export const Home3DShowcase: React.FC = () => {
   const { addToCart } = useCart();
-  const featuredProduct =
-    MOCK_PRODUCTS.find((p) => p.id === 'tee-men') ||
-    MOCK_PRODUCTS.find((p) => p.id === 'tee-women') ||
-    MOCK_PRODUCTS[0];
+  const [featuredProduct, setFeaturedProduct] = useState<Product>(INITIAL_3D_PRODUCT);
   const modelConfig = getProduct3DConfig(featuredProduct);
+
+  useEffect(() => {
+    let active = true;
+    void getProductById('tee-men')
+      .then((product) => {
+        if (active && product) setFeaturedProduct(product);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const [selectedColor, setSelectedColor] = useState(
     featuredProduct.colors.includes('Biała') ? 'Biała' : featuredProduct.colors[0] || 'Biała'
@@ -155,7 +179,7 @@ export const Home3DShowcase: React.FC = () => {
                 autoRotateDefault={true}
                 modelUrl={modelConfig?.modelUrl || '/model.glb'}
                 hotspots={modelConfig?.hotspots}
-                fallbackImageUrl={featuredProduct.imageUrl}
+                fallbackImageUrl={featuredProduct.images?.[0] || featuredProduct.imageUrl}
                 productTitle={featuredProduct.title}
               />
             </Suspense>

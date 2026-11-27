@@ -13,3 +13,6 @@ export const supabase = createClient(url, key, {
     autoRefreshToken: false,
   },
 });
+
+export const getProductImagePublicUrl = (fileName: string): string =>
+  supabase.storage.from('product-images').getPublicUrl(fileName).data.publicUrl;

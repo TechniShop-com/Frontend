@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { Logo } from './Logo';
 import { SearchModal } from './SearchModal';
-import { supabase } from '../lib/supabase';
+import { supabase, getProductImagePublicUrl } from '../lib/supabase';
 
 interface NavbarProps {
   activeBrand?: string;
@@ -372,7 +372,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
                       className="relative h-full w-full rounded-2xl overflow-hidden cursor-pointer group/card flex flex-col justify-between p-3.5 bg-slate-900 border border-purple-500/20 shadow-md min-h-[220px]"
                     >
                       <img
-                        src="https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=600&q=80"
+                        src={getProductImagePublicUrl('photo-1556905055-8f358a7a47b2.avif')}
                         alt="Bluza Hoodie Techni Signature"
                         className="absolute inset-0 w-full h-full object-cover opacity-45 group-hover/card:scale-105 group-hover/card:opacity-55 transition-all duration-500"
                       />
